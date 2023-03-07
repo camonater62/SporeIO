@@ -16,8 +16,10 @@ class Circle {
 
   move() {
     this.pos.add(this.vel);
-    this.vel.rotate(
-      noise((this.pos.x / 100 ), (this.pos.y / 100) - 0.5));
+    let n = noise(this.pos.x, this.pos.y, frameCount);
+    n -= 0.5;
+    n *= PI / 2;
+    this.vel.rotate(n);
     if (this.pos.x < -20) this.pos.x = width + 20;
     if (this.pos.x > width + 20) this.pos.x = -20;
     if (this.pos.y < -20) this.pos.y = height + 20;
@@ -39,11 +41,7 @@ class Circle {
               this.pos,
               radii,
               this.vel,
-              color(
-                red(this.c) + red(circle2.c) / 2,
-                green(this.c) + green(circle2.c) / 2,
-                blue(this.c) + blue(circle2.c) / 2
-              )
+              lerpColor(this.c, circle2.c, 0.5)
             )
           );
           return;
