@@ -1,5 +1,5 @@
 let states = [ 'Spore', 'Universe' ];
-let state = states[0];
+let state = states[1];
 
 function setup() {
     setupSpore();
@@ -11,6 +11,6 @@ function draw() {
     
     switch (state) {
         case 'Spore': drawSpore(); break;
-        case 'Universe': drawUniverse; break;
+        case 'Universe': drawUniverse(); break;
     }
 }
