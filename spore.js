@@ -56,7 +56,6 @@ class Circle {
 let circles = [];
 
 function setupSpore() {
-  createCanvas(400, 400);
   circles.push(
     new Circle(
       createVector(random(width), random(height)),
@@ -68,6 +67,7 @@ function setupSpore() {
 }
 
 function drawSpore() {
+  background(220);
   circles.forEach((c) => {
     c.draw();
     c.move();
@@ -75,7 +75,7 @@ function drawSpore() {
   });
 }
 
-function mouseClicked() {
+function mouseClickedSpore() {
   circles.push(
     new Circle(
       createVector(mouseX, mouseY),
