@@ -21,7 +21,7 @@ let starColors = [
       for (let i = 0; i < numPlanets; i++) {
         let p = new Planet();
         p.distance = distanceFromStar;
-        distanceFromStar += this.rndDouble(20, 200);
+        distanceFromStar += this.rndDouble(50, 200);
         p.diameter = this.rndDouble(4, 20);
         p.temperature = this.rndDouble(-200, 300);
         
@@ -155,35 +155,37 @@ let starColors = [
       // Draw window
       noStroke();
       fill('darkblue');
-      rect(8, 240, 496, 232);
+      let h = height / 3;
+      rect(8, height - h + 8, width - 16, h - 16);
       noFill();
       stroke('white');
-      rect(8, 240, 496, 232);
+      rect(8, height - h + 8, width - 16, h - 16);
       
       // Draw star
-      let body = createVector(14, 356);
-      body.x += star.starDiameter / 2 * 1.375;
+      let body = createVector(14, height - 8 - h / 2);
+      let step = star.starDiameter * (h / 200);
+      body.x += step / 2;
       noStroke();
       fill(star.starColor);
-      circle(body.x, body.y, star.starDiameter * 1.375);
-      body.x += (star.starDiameter * 1.375) + 8;
+      circle(body.x, body.y, step);
+      body.x += step / 2 + 8;
       
       for (let planet of star.planets) {
-        if (body.x + planet.diameter >= 496) break;
-        
-        body.x += planet.diameter;
+        if (body.x + planet.diameter >= width) break;
+        let pstep = planet.diameter * (h / 200);
+        body.x += 2.5 * pstep;
         noStroke();
         fill('red');
-        circle(body.x, body.y, planet.diameter * 1);
+        circle(body.x, body.y, pstep);
         
         let moon = createVector(body.x, body.y);
-        moon.y += planet.diameter + 10;
+        moon.y += pstep + 10;
         
         for (let m of planet.moons) {
           moon.y += m;
           noStroke();
           fill('grey');
-          circle(moon.x, moon.y, m);
+          circle(moon.x, moon.y, 2 * m);
           moon.y += m + 10;
         }
       }
