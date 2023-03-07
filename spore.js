@@ -30,7 +30,8 @@ class Circle {
     for (let i = 0; i < circles.length; i++) {
       let circle2 = circles[i];
       if (circle2 != null && circle2 != this
-        && circle2.r < this.r && !colorEq(this.c, circle2.c)) {
+        && circle2.r < this.r && !colorEq(this.c, circle2.c)
+        && this.r < 150) {
         let d = this.pos.dist(circle2.pos);
         // let radii = this.r + circle2.r;
         //merge the circles here
@@ -39,7 +40,7 @@ class Circle {
           circles.push(
             new Circle(
               this.pos,
-             this.r + Math.sqrt(circle2.r),
+              this.r + Math.sqrt(circle2.r),
               this.vel,
               lerpColor(this.c, circle2.c, circle2.r / this.r)
             )
@@ -53,10 +54,24 @@ class Circle {
   }
 
   explode() {
-    for (let i = 0; i < this.r / 10; i++) {
-      circles.push(new Circle(createVector(this.pos.x + random(-this.r / 10 * 2, this.r / 10 * 2), this.pos.y + random(-this.r / 10 * 2, this.r / 10 * 2)), this.r / 10, this.vel, this.c));
-    }
     delete circles[circles.indexOf(this)];
+    for (let i = 0; i < 5; i++) {
+      circles.push(
+        new Circle(
+          createVector(
+            this.pos.x + random(-this.r / 10 * 2, this.r / 10 * 2), 
+            this.pos.y + random(-this.r / 10 * 2, this.r / 10 * 2)
+          ), 
+          this.r / 10 + random(-5, 5), 
+          createVector(
+            random(width * 0.01), 
+            random(height * 0.01)
+          ), 
+          this.c
+        )
+      );
+    }
+    
   }
 }
 
@@ -80,7 +95,7 @@ function drawSpore() {
       c.move();
       c.detectCollision();
       c.draw();
-      if (c.r > 100) {
+      if (c.r >= 100) {
         c.explode();
       }
     }
