@@ -90,6 +90,12 @@ function mouseClickedSpore() {
   );
 }
 
+function mouseDragged() {
+    if (random() < 0.2) {
+        mouseClickedSpore();
+    }
+}
+
 function colorEq(c1, c2) {
     for (let i = 0; i < 3; i++) {
         if (c1.levels[i] != c2.levels[i]) {
