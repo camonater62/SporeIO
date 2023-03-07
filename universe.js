@@ -94,7 +94,6 @@ let starColors = [
   let starSelected;
   
   function setupUniverse() {
-    
     galaxyOffset = createVector(0, 0);
     starSelected = undefined;
   }

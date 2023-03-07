@@ -29,7 +29,8 @@ class Circle {
   detectCollision() {
     for (let i = 0; i < circles.length; i++) {
       let circle2 = circles[i];
-      if (circle2 != null && circle2 != this && circle2.r < this.r) {
+      if (circle2 != null && circle2 != this 
+      && circle2.r < this.r && !colorEq(this.c, circle2.c)) {
         let d = this.pos.dist(circle2.pos);
         let radii = this.r + circle2.r;
         //merge the circles here
@@ -87,4 +88,13 @@ function mouseClickedSpore() {
       )
     )
   );
+}
+
+function colorEq(c1, c2) {
+    for (let i = 0; i < 3; i++) {
+        if (c1.levels[i] != c2.levels[i]) {
+            return false;
+        }
+    }
+    return true;
 }
