@@ -29,17 +29,17 @@ class Circle {
   detectCollision() {
     for (let i = 0; i < circles.length; i++) {
       let circle2 = circles[i];
-      if (circle2 != null && circle2 != this 
-      && circle2.r < this.r && !colorEq(this.c, circle2.c)) {
+      if (circle2 != null && circle2 != this
+        && circle2.r < this.r && !colorEq(this.c, circle2.c)) {
         let d = this.pos.dist(circle2.pos);
-        let radii = this.r + circle2.r;
+        // let radii = this.r + circle2.r;
         //merge the circles here
         if (d <= this.r) {
-          
+
           circles.push(
             new Circle(
               this.pos,
-              radii,
+             this.r + Math.sqrt(circle2.r),
               this.vel,
               lerpColor(this.c, circle2.c, circle2.r / this.r)
             )
@@ -50,6 +50,13 @@ class Circle {
         }
       }
     }
+  }
+
+  explode() {
+    for (let i = 0; i < this.r / 10; i++) {
+      circles.push(new Circle(createVector(this.pos.x + random(-this.r / 10 * 2, this.r / 10 * 2), this.pos.y + random(-this.r / 10 * 2, this.r / 10 * 2)), this.r / 10, this.vel, this.c));
+    }
+    delete circles[circles.indexOf(this)];
   }
 }
 
@@ -69,9 +76,14 @@ function setupSpore() {
 function drawSpore() {
   background(220);
   circles.forEach((c) => {
-    c.move();
-    c.detectCollision();
-    c.draw();
+    if (c != null) {
+      c.move();
+      c.detectCollision();
+      c.draw();
+      if (c.r > 100) {
+        c.explode();
+      }
+    }
   });
 }
 
@@ -91,16 +103,16 @@ function mouseClickedSpore() {
 }
 
 function mouseDragged() {
-    if (random() < 0.2) {
-        mouseClickedSpore();
-    }
+  if (random() < 0.2) {
+    mouseClickedSpore();
+  }
 }
 
 function colorEq(c1, c2) {
-    for (let i = 0; i < 3; i++) {
-        if (c1.levels[i] != c2.levels[i]) {
-            return false;
-        }
+  for (let i = 0; i < 3; i++) {
+    if (c1.levels[i] != c2.levels[i]) {
+      return false;
     }
-    return true;
+  }
+  return true;
 }
