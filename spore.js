@@ -11,7 +11,7 @@ class Circle {
   draw() {
     noStroke();
     fill(this.c);
-    circle(this.pos.x, this.pos.y, this.r);
+    circle(this.pos.x, this.pos.y, 2 * this.r);
   }
 
   move() {
@@ -29,21 +29,22 @@ class Circle {
   detectCollision() {
     for (let i = 0; i < circles.length; i++) {
       let circle2 = circles[i];
-      if (circle2 != null) {
-        let d = dist(this.pos.x, this.pos.y, circle2.pos.x, circle2.pos.y);
+      if (circle2 != null && circle2 != this && circle2.r < this.r) {
+        let d = this.pos.dist(circle2.pos);
         let radii = this.r + circle2.r;
         //merge the circles here
-        if (abs(d * d) < radii * radii && d !== 0) {
-          delete circles[i];
-          delete circles[circles.indexOf(this)];
+        if (d <= this.r) {
+          
           circles.push(
             new Circle(
               this.pos,
               radii,
               this.vel,
-              lerpColor(this.c, circle2.c, 0.5)
+              lerpColor(this.c, circle2.c, circle2.r / this.r)
             )
           );
+          delete circles[i];
+          delete circles[circles.indexOf(this)];
           return;
         }
       }
@@ -67,9 +68,9 @@ function setupSpore() {
 function drawSpore() {
   background(220);
   circles.forEach((c) => {
-    c.draw();
     c.move();
     c.detectCollision();
+    c.draw();
   });
 }
 
