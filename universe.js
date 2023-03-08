@@ -32,12 +32,12 @@ let starColors = [
         
         // Normalize
         let sum = 1 / (p.foliage + p.minerals + p.gases + p.water);
-        p.foliate *= sum;
+        p.foliage *= sum;
         p.minerals *= sum;
         p.gases *= sum;
         p.water *= sum;
         
-        p.populate = max(this.rndInt(-50000000, 20000000), 0); // 1/5 change for no pop
+        p.populate = max(this.rndInt(-50000000, 20000000), 0); // 1/5 chance for no pop
         
         p.ring = this.rndInt(0, 10) == 1;
         
