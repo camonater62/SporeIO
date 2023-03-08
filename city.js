@@ -1,6 +1,7 @@
 // hello there
 // kaelen cook incorpoclated
 
+entities = [];
 class Entity {
     constructor(x, y, clr, rad, shape, speed) {
         this.pos = {x: x, y: y}             // where dudey is
@@ -8,6 +9,7 @@ class Entity {
         this.height = rad;                  // if height, height
         this.clr = clr;                     // dudey's color
         this.shape = shape;                 // dudey's body positivity
+        this.area;                          // dudey's area shame
 
         // movement
         this.maxspeed = speed;              // lerp to speed, fade out stop.
@@ -18,7 +20,7 @@ class Entity {
     }
     draw() {
         noStroke();                         // we ain't acceptin' no lines in this here town
-        fill(this.c);                       // we are acceptin' filler folk
+        fill(this.clr);                       // we are acceptin' filler folk
         if (this.shape = 'circle') {                                                // if it's a circle, circle-make
             ellipse(this.pos.x, this.pos.y, this.rad, this.height);                 // defines circle with radius, you guessed it, radius
         }
@@ -32,7 +34,7 @@ class Entity {
 }
 
 class Building extends Entity {
-    constructor(type, tier, owner, capacity) {
+    constructor(type, tier, owner) {
         super();
         this.tier = tier;                               // what level building is it? 1-3
         this.type = type;                               // what function does the building serve
@@ -40,8 +42,8 @@ class Building extends Entity {
         this.owner = owner;                             // yeah this is a capitalism simulator, what of it?
 
         // worker/people data (some may be irrelevant):
-        this.capacity = capacity;                       // number, how many people can be in building at once.
-        this.workCap = capacity;                        // number, how many people can have jobs here.
+        this.capacity = this.area;                       // number, how many people can be in building at once.
+        this.workCap = 2;                        // number, how many people can have jobs here.
         this.workers = [];                              // list of all workers of building.
         this.peeps = 0;                                 // amt of people currently in building.
         this.people = [];                               // list of people currently in building.
@@ -135,29 +137,49 @@ class Dude extends Entity {    // Dude, The
     }
 }
 
-class Resource {
+class Resource extends Entity{
     constructor(type, tier) {
         super();
         this.type = type;                   // what resource; wood, minerals, etc.
         this.tier = tier;                   // what size deposit; tiny, small, medium, large, gargantuan
+        // if tier is higher, display more minerals.
     }
-    draw() {
-        // display resource
-        noStroke();
-        fill(this.clr);
+    tierDisplay() {
+        // show more minerals/resources for higher tiers
     }
     destroy() {
         // remove from entities, play explosion, drop chunks? (scope)
     }
 }
-function addResources(amt, x, width, y, height, tier) {
 
+function addResources(amt, x, width, y, height, tier) {
+    for (let i = 0; i < amt; i++) {
+        let randomx = Math.floor(Math.random() * (width - x) + x);
+        let randomy = Math.floor(Math.random() * (height - y) + y);
+        let randtier = Math.floor(Math.random() * (tier - 1) + 1);
+        let randsize=  Math.floor(Math.random() * (25 - 20) + 20);
+        let clay = new Entity(randomx, randomy, 120, randsize, 'square', 0);
+        let deposit = new Resource('mineral', randtier);
+        entities.push(deposit);
+    }
+}
+function addDudes(amt, x, width, y, height) {
+    for (let i = 0; i < amt; i++) {
+        let randomx = Math.floor(Math.random() * (width - x) + x);
+        let randomy = Math.floor(Math.random() * (height - y) + y);
+        let randsize=  Math.floor(Math.random() * (25 - 20) + 20);
+        let clay = new Entity(randomx, randomy, 120, randsize, 'square', 0);
+        let dude = new Dude(null, null);
+        entities.push(dude);
+    }
 }
 
-entities = [];
-
 function setupCity() {
-    // place primary base, generate resources/foliage, 
+    // place primary base, generate resources/foliage,
+    addResources(150, 0, 600, 0, 600, 3);
+    addDudes(15, 0, 600, 0, 600);
+    let homeBase = new Building('Home', 1, null);
+    entities.push(homeBase);
 }
 
 function drawCity() {
