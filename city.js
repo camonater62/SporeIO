@@ -4,28 +4,30 @@
 entities = [];
 class Entity {
     constructor(x, y, clr, rad, shape, speed) {
+        x = x || random(width);
+        y = y || random(height);
         this.pos = {x: x, y: y}             // where dudey is
-        this.rad = rad;                     // dudey's size
-        this.height = rad;                  // if height, height
-        this.clr = clr;                     // dudey's color
+        this.rad = rad || 50;                     // dudey's size
+        this.height = rad || 10;                  // if height, height
+        this.clr = clr || color(0, 0, 0);                     // dudey's color
         this.shape = shape;                 // dudey's body positivity
         this.area;                          // dudey's area shame
 
         // movement
         this.maxspeed = speed;              // lerp to speed, fade out stop.
-        this.wantspeed = 0;                 // speed we want to be at
+        this.wantspeed = this.maxspeed;                 // speed we want to be at
         this.speed = 0;                     // current speed lerp status
-        this.dir = 0;                       // dudey's direction
+        this.dir = random(2*PI);                       // dudey's direction
         this.dest = {x: x, y: y}            // where dudey wants to go
     }
     draw() {
         noStroke();                         // we ain't acceptin' no lines in this here town
         fill(this.clr);                       // we are acceptin' filler folk
-        if (this.shape = 'circle') {                                                // if it's a circle, circle-make
+        if (this.shape == 'circle') {                                                // if it's a circle, circle-make
             ellipse(this.pos.x, this.pos.y, this.rad, this.height);                 // defines circle with radius, you guessed it, radius
         }
-        else if (this.shape = 'square') {
-            rect(this.pox.x, this.pos.y, this.rad, this.height, this.rad/10);          // defines square with rounded edges
+        else if (this.shape == 'square') {
+            rect(this.pos.x, this.pos.y, this.rad, this.height, this.rad/10);          // defines square with rounded edges
         }
     }
     update() {
@@ -79,7 +81,7 @@ class Home extends Building {
 
 class Dude extends Entity {    // Dude, The
     constructor(home, job) {
-        super();
+        super(home.pos.x + random(-100, 100), home.pos.y + random(-100, 100), color(0, 0, 200), 20, 'circle', 100);
         this.home = home;           // what building was dude born in
         this.job = job;             // where does dude spend his life
 
@@ -123,7 +125,7 @@ class Dude extends Entity {    // Dude, The
                 this.speed = this.wantspeed;                 // set it to proper speed
             }
             else {
-                lerp(this.speed, this.wantspeed, 1);             // otherwise, increment speed
+                this.speed = lerp(this.speed, this.wantspeed, deltaTime / 1000);             // otherwise, increment speed
             }
         }
         else if (this.speed > this.wantspeed) {
@@ -131,15 +133,21 @@ class Dude extends Entity {    // Dude, The
                 this.speed = this.wantspeed;
             }
             else {
-                lerp(this.speed, this.wantspeed, 1);
+                this.speed = lerp(this.speed, this.wantspeed, deltaTime / 1000);
             }
         }
+
+        let vel = createVector(cos(this.dir), sin(this.dir))
+            .mult(this.speed)
+            .mult(deltaTime / 1000);
+        this.pos.x += vel.x;
+        this.pos.y += vel.y;
     }
 }
 
 class Resource extends Entity{
     constructor(type, tier) {
-        super();
+        super(random(width), random(height), color(200, 200, 100), 40, 'square', 0);
         this.type = type;                   // what resource; wood, minerals, etc.
         this.tier = tier;                   // what size deposit; tiny, small, medium, large, gargantuan
         // if tier is higher, display more minerals.
@@ -163,31 +171,32 @@ function addResources(amt, x, width, y, height, tier) {
         entities.push(deposit);
     }
 }
-function addDudes(amt, x, width, y, height) {
+function addDudes(amt, x, width, y, height, home) {
     for (let i = 0; i < amt; i++) {
         let randomx = Math.floor(Math.random() * (width - x) + x);
         let randomy = Math.floor(Math.random() * (height - y) + y);
         let randsize=  Math.floor(Math.random() * (25 - 20) + 20);
         let clay = new Entity(randomx, randomy, 120, randsize, 'square', 0);
-        let dude = new Dude(null, null);
+        let dude = new Dude(home, null);
         entities.push(dude);
     }
 }
 
 function setupCity() {
     // place primary base, generate resources/foliage,
-    addResources(150, 0, 600, 0, 600, 3);
-    addDudes(15, 0, 600, 0, 600);
     let homeBase = new Building('Home', 1, null);
     entities.push(homeBase);
+    addResources(150, 0, 600, 0, 600, 3);
+    addDudes(15, 0, 600, 0, 600, homeBase);
+    
 }
 
 function drawCity() {
     background(540);
     entities.forEach((e) => {
         e.draw();
-    })
-    console.log("city");
+        e.update();
+    });
 }
 
 function mouseClickedCity() {
