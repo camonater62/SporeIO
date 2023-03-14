@@ -2,9 +2,11 @@
 // kaelen cook incorpoclated
 
 entities = [];
+dudes = [];
+resources = [];
 class Entity {
-    constructor(x=random(width), y=random(height), clr=color(0,0,0), rad=50, shape='square', speed=0) {
-        this.pos = {x: x, y: y}             // where dudey is
+    constructor(x = random(width), y = random(height), clr = color(0, 0, 0), rad = 50, shape = 'square', speed = 0) {
+        this.pos = createVector(x, y);             // where dudey is
         this.rad = rad;                     // dudey's size
         this.height = rad;                  // if height, height
         this.clr = clr;                     // dudey's color
@@ -15,8 +17,8 @@ class Entity {
         this.maxspeed = speed;              // lerp to speed, fade out stop.
         this.wantspeed = this.maxspeed;                 // speed we want to be at
         this.speed = 0;                     // current speed lerp status
-        this.dir = random(2*PI);                       // dudey's direction
-        this.dest = {x: x, y: y}            // where dudey wants to go
+        this.dir = random(2 * PI);                       // dudey's direction
+        this.dest = { x: x, y: y }
     }
     draw() {
         noStroke();                         // we ain't acceptin' no lines in this here town
@@ -25,7 +27,7 @@ class Entity {
             ellipse(this.pos.x, this.pos.y, this.rad, this.height);                 // defines circle with radius, you guessed it, radius
         }
         else if (this.shape == 'square') {
-            rect(this.pos.x, this.pos.y, this.rad, this.height, this.rad/10);          // defines square with rounded edges
+            rect(this.pos.x, this.pos.y, this.rad, this.height, this.rad / 10);          // defines square with rounded edges
         }
     }
     update() {
@@ -50,7 +52,7 @@ class Building extends Entity {
     }
     upgrade() {
         this.tier += 1;
-        this.rad += (tier-1) * this.rad/3;              // basically, add a third of its size with every tier.
+        this.rad += (tier - 1) * this.rad / 3;              // basically, add a third of its size with every tier.
         // note: this increases quadratically; 1st time add 20, 2nd time add 40, 3rd time add 60, and so on so forth.
     }
 
@@ -58,7 +60,7 @@ class Building extends Entity {
         noStroke();                                             // if only I could've done this for grandpa
         fill(this.clr);                                         // this would've been a bit weird for grandpa
         circle(this.pos.x, this.pos.y, 2 * this.rad);           // oh yeah now grandpa would've loved circles
-      }
+    }
 }
 
 class Home extends Building {
@@ -79,13 +81,14 @@ class Home extends Building {
 
 class Dude extends Entity {    // Dude, The
     constructor(home, job) {
-        super(home.pos.x + random(-100, 100), home.pos.y + random(-100, 100), color(0, 0, 200), 20, 'circle', 100);
+        super(home.pos.x, home.pos.y, color(0, 0, 200), 20, 'circle', 100);
         this.home = home;           // what building was dude born in
         this.job = job;             // where does dude spend his life
+        this.resource = false;
 
         // families? lineages? clans?
 
-        this.inventory = {minerals: 0, wood: 0, love: 0};      // what can dude carry (you even lift brah)
+        // this.inventory = {minerals: 0, wood: 0, love: 0};      // what can dude carry (you even lift brah)
     }
 
     moveHome() {                    // function for changing homes
@@ -114,6 +117,32 @@ class Dude extends Entity {    // Dude, The
         // go home, deposit resources, do again
     }
 
+    // detectEdgeCollision() {
+    //     if (
+    //         this.position.x > width ||
+    //         this.position.y > height ||
+    //         this.position.x < 0 ||
+    //         this.position.y < 0
+    //     ) {
+    //         // //bounce the path off the edge and keep going 
+    //         // this.angle += (2 * PI) / 3;
+    //     }
+    // }
+
+    detectResourceCollision() {
+        for (let i = 0; i < resources.length; i++) {
+            let resource = resources[i];
+            if (resource != null) {
+                let d = this.pos.dist(resource.pos);
+                // let radii = this.rad + resource.rad;
+                if (d <= this.rad) {
+                    this.resource = true;
+                    this.speed = 0;
+                }
+            }
+        }
+    }
+
     update() {
         // this feels janky. its 1:24 am and I am satisfied with the jank. later me and cameron/nic (HI CAMERON/NIC! hows it going guys wow so great to meet you digitally through code for once) may not
 
@@ -138,12 +167,18 @@ class Dude extends Entity {    // Dude, The
         let vel = createVector(cos(this.dir), sin(this.dir))
             .mult(this.speed)
             .mult(deltaTime / 1000);
-        this.pos.x += vel.x;
-        this.pos.y += vel.y;
+        if (this.resource) {
+            this.pos.x -= vel.x;
+            this.pos.y -= vel.y;
+        } else {
+            this.pos.x += vel.x;
+            this.pos.y += vel.y;
+        }
+        this.detectResourceCollision();
     }
 }
 
-class Resource extends Entity{
+class Resource extends Entity {
     constructor(type, tier) {
         super(random(width), random(height), color(200, 200, 100), 40, 'square', 0);
         this.type = type;                   // what resource; wood, minerals, etc.
@@ -163,20 +198,20 @@ function addResources(amt, x, width, y, height, tier) {
         let randomx = Math.floor(Math.random() * (width - x) + x);
         let randomy = Math.floor(Math.random() * (height - y) + y);
         let randtier = Math.floor(Math.random() * (tier - 1) + 1);
-        let randsize=  Math.floor(Math.random() * (25 - 20) + 20);
+        let randsize = Math.floor(Math.random() * (25 - 20) + 20);
         let clay = new Entity(randomx, randomy, 120, randsize, 'square', 0);
         let deposit = new Resource('mineral', randtier);
-        entities.push(deposit);
+        resources.push(deposit);
     }
 }
 function addDudes(amt, x, width, y, height, home) {
     for (let i = 0; i < amt; i++) {
         let randomx = Math.floor(Math.random() * (width - x) + x);
         let randomy = Math.floor(Math.random() * (height - y) + y);
-        let randsize=  Math.floor(Math.random() * (25 - 20) + 20);
+        let randsize = Math.floor(Math.random() * (25 - 20) + 20);
         let clay = new Entity(randomx, randomy, 120, randsize, 'square', 0);
         let dude = new Dude(home, null);
-        entities.push(dude);
+        dudes.push(dude);
     }
 }
 
@@ -184,9 +219,9 @@ function setupCity() {
     // place primary base, generate resources/foliage,
     let homeBase = new Building('Home', 1, null);
     entities.push(homeBase);
-    addResources(150, 0, 600, 0, 600, 3);
-    addDudes(15, 0, 600, 0, 600, homeBase);
-    
+    addResources(20, 0, 600, 0, 600, 3);
+    addDudes(1, 0, 600, 0, 600, homeBase);
+
 }
 
 function drawCity() {
@@ -194,6 +229,14 @@ function drawCity() {
     entities.forEach((e) => {
         e.draw();
         e.update();
+    });
+    dudes.forEach((d) => {
+        d.draw();
+        d.update();
+    });
+    resources.forEach((r) => {
+        r.draw();
+        r.update();
     });
 }
 
