@@ -3,13 +3,11 @@
 
 entities = [];
 class Entity {
-    constructor(x, y, clr, rad, shape, speed) {
-        x = x || random(width);
-        y = y || random(height);
+    constructor(x=random(width), y=random(height), clr=color(0,0,0), rad=50, shape='square', speed=0) {
         this.pos = {x: x, y: y}             // where dudey is
-        this.rad = rad || 50;                     // dudey's size
-        this.height = rad || 10;                  // if height, height
-        this.clr = clr || color(0, 0, 0);                     // dudey's color
+        this.rad = rad;                     // dudey's size
+        this.height = rad;                  // if height, height
+        this.clr = clr;                     // dudey's color
         this.shape = shape;                 // dudey's body positivity
         this.area;                          // dudey's area shame
 
