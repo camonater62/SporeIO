@@ -118,6 +118,7 @@ class Universe {
     this.maxy = ceil(screens / 2 * h);
 
     this.topleft = createVector(0, 0);
+    this.scale = 16;
 
     this.grid = {};
 
@@ -128,7 +129,7 @@ class Universe {
       }
     }
 
-    console.log(this.grid);
+    // console.log(this.grid);
   }
 
   draw() {
@@ -138,8 +139,10 @@ class Universe {
     if (keyIsDown(LEFT_ARROW)) this.topleft.x -= 50 * dt;
     if (keyIsDown(RIGHT_ARROW)) this.topleft.x += 50 * dt;
 
-    let sectorsX = width / 16;
-    let sectorsY = height / 16;
+    this.scale = 16 * max(1, mousePos/250);
+
+    let sectorsX = width / this.scale;
+    let sectorsY = height / this.scale;
 
     this.topleft.y = max(this.miny, this.topleft.y);
     this.topleft.x = max(this.minx, this.topleft.x);
@@ -147,7 +150,7 @@ class Universe {
     this.topleft.y = min(this.maxy - sectorsY, this.topleft.y);    
     this.topleft.x = min(this.maxx - sectorsX, this.topleft.x);  
   
-    let mouse = createVector(int(mouseX / 16), int(mouseY / 16));
+    let mouse = createVector(int(mouseX / this.scale), int(mouseY / this.scale));
     let galaxy_mouse = createVector(
       int(mouse.x + this.topleft.x),
       int(mouse.y + this.topleft.y)
@@ -163,17 +166,17 @@ class Universe {
           noStroke();
           fill(star.starColor);
           circle(
-            screen_sector.x * 16 + 8 - this.topleft.x * 16,
-            screen_sector.y * 16 + 8 - this.topleft.y * 16,
-            star.starDiameter / 8
+            screen_sector.x * this.scale + this.scale / 2 - this.topleft.x * this.scale,
+            screen_sector.y * this.scale + this.scale / 2 - this.topleft.y * this.scale,
+            star.starDiameter / 128 * this.scale
           );
   
           if (galaxy_mouse.x == screen_sector.x && galaxy_mouse.y == screen_sector.y) {
             stroke("orange");
             noFill();
             circle(
-              screen_sector.x * 16 + 8 - this.topleft.x * 16,
-              screen_sector.y * 16 + 8 - this.topleft.y * 16,
+              screen_sector.x * this.scale + this.scale / 2 - this.topleft.x * this.scale,
+              screen_sector.y * this.scale + this.scale / 2 - this.topleft.y * this.scale,
               star.starDiameter / 4
             );
           }

@@ -26,3 +26,8 @@ function mouseClicked() {
         case 'Spore': mouseClickedSpore(); break;
     }
 }
+
+let mousePos = 0;
+function mouseWheel(event) {
+    mousePos += event.delta;
+}
