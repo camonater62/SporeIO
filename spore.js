@@ -27,10 +27,10 @@ class Circle {
     this.vel.add(this.acceleration);
     this.vel.limit(this.maxSpeed);
     this.acceleration.mult(0);
-    if (this.pos.x < -20) this.pos.x = width + 20;
-    if (this.pos.x > width + 20) this.pos.x = -20;
-    if (this.pos.y < -20) this.pos.y = height + 20;
-    if (this.pos.y > height + 20) this.pos.y = -20;
+    if (this.pos.x < -this.r * 2) this.pos.x = width + 20;
+    if (this.pos.x > width + this.r * 2) this.pos.x = -20;
+    if (this.pos.y < -this.r * 2) this.pos.y = height + 20;
+    if (this.pos.y > height + this.r * 2) this.pos.y = -20;
   }
 
   detectCollision() {
@@ -191,6 +191,7 @@ function drawSpore() {
     }
   });
   fill(0);
+  textFont(myFont);
   textSize(32);
   text("Number of circles: " + circles.length, 40, 40);
   let max = circles[0];
