@@ -45,8 +45,8 @@ class Circle {
               lerpColor(this.c, circle2.c, circle2.r / this.r)
             )
           );
-          delete circles[i];
-          delete circles[circles.indexOf(this)];
+          circles.splice(i, 1);
+          circles.splice(circles.indexOf(this), 1);
           return;
         }
       }
@@ -54,7 +54,6 @@ class Circle {
   }
 
   explode() {
-    delete circles[circles.indexOf(this)];
     for (let i = 0; i < 5; i++) {
       circles.push(
         new Circle(
@@ -71,7 +70,7 @@ class Circle {
         )
       );
     }
-    
+    circles.splice(circles.indexOf(this), 1);
   }
 }
 
@@ -100,6 +99,14 @@ function drawSpore() {
       }
     }
   });
+  fill(0);
+  textSize(32);
+  text("Number of circles: " + circles.length, 40, 40);
+  let max = circles[0];
+  for(let i = 1; i < circles.length; i++) {
+    max = circles[i].r * 2 > max.r * 2 ? circles[i] : max;
+  }
+  text("Largest circle: " + Math.floor(max.r * 2), 40, 80);
 }
 
 function mouseClickedSpore() {
