@@ -9,8 +9,6 @@ const starColors = [
   "#9D1928",
 ];
 
-
-
 class StarSystem {
   /**
    * 
@@ -107,19 +105,22 @@ class Universe {
    * 
    * @param {Number} w 
    * @param {Number} h 
+   * @param {Number} screens
    */
-  constructor(w, h) {
+  constructor(w, h, screens=1) {
     this.w = w;
     this.h = h;
 
-    this.grid = [];
+    this.grid = {};
 
-    for (let y = 0; y < h; y++) {
-      this.grid[y] = [];
-      for (let x = 0; x < w; x++) {
+    for (let y = floor(-screens / 2 * h); y < ceil(screens / 2 * h); y++) {
+      this.grid[y] = {};
+      for (let x = floor(-screens / 2 * w); x < ceil(screens / 2 * w); x++) {
         this.grid[y][x] = new StarSystem(x, y, true);
       }
     }
+
+    console.log(this.grid);
   }
 
   draw() {
@@ -206,7 +207,7 @@ let universe;
 function setupUniverse() {
   galaxyOffset = createVector(0, 0);
   starSelected = undefined;
-  universe = new Universe(width / 16, height / 16);
+  universe = new Universe(width / 16, height / 16, 5);
 }
 
 function drawUniverse() {
