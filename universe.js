@@ -138,11 +138,14 @@ class Universe {
     if (keyIsDown(LEFT_ARROW)) this.topleft.x -= 50 * dt;
     if (keyIsDown(RIGHT_ARROW)) this.topleft.x += 50 * dt;
 
+    let sectorsX = width / 16;
+    let sectorsY = height / 16;
+
     this.topleft.y = max(this.miny, this.topleft.y);
     this.topleft.x = max(this.minx, this.topleft.x);
 
-    let sectorsX = width / 16 + this.topleft.x;
-    let sectorsY = height / 16 + this.topleft.y;
+    this.topleft.y = min(this.maxy - sectorsY, this.topleft.y);    
+    this.topleft.x = min(this.maxx - sectorsX, this.topleft.x);  
   
     let mouse = createVector(int(mouseX / 16), int(mouseY / 16));
     let galaxy_mouse = createVector(
@@ -152,8 +155,8 @@ class Universe {
   
     let screen_sector = createVector(0, 0);
   
-    for (screen_sector.y = floor(this.topleft.y); screen_sector.y < ceil(sectorsY); screen_sector.y++) {
-      for (screen_sector.x = floor(this.topleft.x); screen_sector.x < ceil(sectorsX); screen_sector.x++) {
+    for (screen_sector.y = floor(this.topleft.y); screen_sector.y < ceil(this.topleft.y + sectorsY); screen_sector.y++) {
+      for (screen_sector.x = floor(this.topleft.x); screen_sector.x < ceil(this.topleft.x + sectorsX); screen_sector.x++) {
         let star = this.grid[screen_sector.y][screen_sector.x];
   
         if (star.starExists) {
