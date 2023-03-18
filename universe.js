@@ -111,11 +111,19 @@ class Universe {
     this.w = w;
     this.h = h;
 
+    this.minx = floor(-screens / 2 * w);
+    this.maxx = ceil(screens / 2 * w);
+
+    this.miny = floor(-screens / 2 * h);
+    this.maxy = ceil(screens / 2 * h);
+
+    this.topleft = createVector(0, 0);
+
     this.grid = {};
 
-    for (let y = floor(-screens / 2 * h); y < ceil(screens / 2 * h); y++) {
+    for (let y = this.miny; y <= this.maxy; y++) {
       this.grid[y] = {};
-      for (let x = floor(-screens / 2 * w); x < ceil(screens / 2 * w); x++) {
+      for (let x = this.minx; x < this.maxx; x++) {
         this.grid[y][x] = new StarSystem(x, y, true);
       }
     }
@@ -124,36 +132,45 @@ class Universe {
   }
 
   draw() {
-    let sectorsX = width / 16;
-    let sectorsY = height / 16;
+    let dt = deltaTime / 1000;
+    if (keyIsDown(UP_ARROW)) this.topleft.y -= 50 * dt;
+    if (keyIsDown(DOWN_ARROW)) this.topleft.y += 50 * dt;
+    if (keyIsDown(LEFT_ARROW)) this.topleft.x -= 50 * dt;
+    if (keyIsDown(RIGHT_ARROW)) this.topleft.x += 50 * dt;
+
+    this.topleft.y = max(this.miny, this.topleft.y);
+    this.topleft.x = max(this.minx, this.topleft.x);
+
+    let sectorsX = width / 16 + this.topleft.x;
+    let sectorsY = height / 16 + this.topleft.y;
   
     let mouse = createVector(int(mouseX / 16), int(mouseY / 16));
     let galaxy_mouse = createVector(
-      int(mouse.x + galaxyOffset.x),
-      int(mouse.y + galaxyOffset.y)
+      int(mouse.x + this.topleft.x),
+      int(mouse.y + this.topleft.y)
     );
   
     let screen_sector = createVector(0, 0);
   
-    for (screen_sector.y = 0; screen_sector.y < sectorsY; screen_sector.y++) {
-      for (screen_sector.x = 0; screen_sector.x < sectorsX; screen_sector.x++) {
+    for (screen_sector.y = floor(this.topleft.y); screen_sector.y < ceil(sectorsY); screen_sector.y++) {
+      for (screen_sector.x = floor(this.topleft.x); screen_sector.x < ceil(sectorsX); screen_sector.x++) {
         let star = this.grid[screen_sector.y][screen_sector.x];
   
         if (star.starExists) {
           noStroke();
           fill(star.starColor);
           circle(
-            screen_sector.x * 16 + 8,
-            screen_sector.y * 16 + 8,
+            screen_sector.x * 16 + 8 - this.topleft.x * 16,
+            screen_sector.y * 16 + 8 - this.topleft.y * 16,
             star.starDiameter / 8
           );
   
-          if (mouse.x == screen_sector.x && mouse.y == screen_sector.y) {
+          if (galaxy_mouse.x == screen_sector.x && galaxy_mouse.y == screen_sector.y) {
             stroke("orange");
             noFill();
             circle(
-              screen_sector.x * 16 + 8,
-              screen_sector.y * 16 + 8,
+              screen_sector.x * 16 + 8 - this.topleft.x * 16,
+              screen_sector.y * 16 + 8 - this.topleft.y * 16,
               star.starDiameter / 4
             );
           }
@@ -211,15 +228,8 @@ function setupUniverse() {
 }
 
 function drawUniverse() {
-  // let dt = deltaTime / 1000;
-  // if (keyIsDown(UP_ARROW)) galaxyOffset.y -= 50 * dt;
-  // if (keyIsDown(DOWN_ARROW)) galaxyOffset.y += 50 * dt;
-  // if (keyIsDown(LEFT_ARROW)) galaxyOffset.x -= 50 * dt;
-  // if (keyIsDown(RIGHT_ARROW)) galaxyOffset.x += 50 * dt;
-
   background(0);
   universe.draw();
-  
 }
 
 /**
