@@ -29,3 +29,8 @@ function mouseClicked() {
         case 'City': mouseClickedCity(); break;
     }
 }
+
+let mousePos = 0;
+function mouseWheel(event) {
+    mousePos += event.delta;
+}

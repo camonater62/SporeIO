@@ -9,8 +9,6 @@ const starColors = [
   "#9D1928",
 ];
 
-
-
 class StarSystem {
   /**
    * 
@@ -107,52 +105,78 @@ class Universe {
    * 
    * @param {Number} w 
    * @param {Number} h 
+   * @param {Number} screens
    */
-  constructor(w, h) {
+  constructor(w, h, screens=1) {
     this.w = w;
     this.h = h;
 
-    this.grid = [];
+    this.minx = floor(-screens / 2 * w);
+    this.maxx = ceil(screens / 2 * w);
 
-    for (let y = 0; y < h; y++) {
-      this.grid[y] = [];
-      for (let x = 0; x < w; x++) {
+    this.miny = floor(-screens / 2 * h);
+    this.maxy = ceil(screens / 2 * h);
+
+    this.topleft = createVector(0, 0);
+    this.scale = 16;
+
+    this.grid = {};
+
+    for (let y = this.miny; y <= this.maxy; y++) {
+      this.grid[y] = {};
+      for (let x = this.minx; x < this.maxx; x++) {
         this.grid[y][x] = new StarSystem(x, y, true);
       }
     }
+
+    // console.log(this.grid);
   }
 
   draw() {
-    let sectorsX = width / 16;
-    let sectorsY = height / 16;
+    let dt = deltaTime / 1000;
+    if (keyIsDown(UP_ARROW)) this.topleft.y -= 50 * dt;
+    if (keyIsDown(DOWN_ARROW)) this.topleft.y += 50 * dt;
+    if (keyIsDown(LEFT_ARROW)) this.topleft.x -= 50 * dt;
+    if (keyIsDown(RIGHT_ARROW)) this.topleft.x += 50 * dt;
+
+    this.scale = 16 * max(1, mousePos/250);
+
+    let sectorsX = width / this.scale;
+    let sectorsY = height / this.scale;
+
+    this.topleft.y = max(this.miny, this.topleft.y);
+    this.topleft.x = max(this.minx, this.topleft.x);
+
+    this.topleft.y = min(this.maxy - sectorsY, this.topleft.y);    
+    this.topleft.x = min(this.maxx - sectorsX, this.topleft.x);  
   
-    let mouse = createVector(int(mouseX / 16), int(mouseY / 16));
+    let mouse = createVector(int(mouseX / this.scale), int(mouseY / this.scale));
     let galaxy_mouse = createVector(
-      int(mouse.x + galaxyOffset.x),
-      int(mouse.y + galaxyOffset.y)
+      int(mouse.x + this.topleft.x),
+      int(mouse.y + this.topleft.y)
     );
   
     let screen_sector = createVector(0, 0);
   
-    for (screen_sector.y = 0; screen_sector.y < sectorsY; screen_sector.y++) {
-      for (screen_sector.x = 0; screen_sector.x < sectorsX; screen_sector.x++) {
+    for (screen_sector.y = floor(this.topleft.y); screen_sector.y < ceil(this.topleft.y + sectorsY); screen_sector.y++) {
+      for (screen_sector.x = floor(this.topleft.x); screen_sector.x < ceil(this.topleft.x + sectorsX); screen_sector.x++) {
         let star = this.grid[screen_sector.y][screen_sector.x];
   
         if (star.starExists) {
           noStroke();
           fill(star.starColor);
           circle(
-            screen_sector.x * 16 + 8,
-            screen_sector.y * 16 + 8,
-            star.starDiameter / 8
+            screen_sector.x * this.scale + this.scale / 2 - this.topleft.x * this.scale,
+            screen_sector.y * this.scale + this.scale / 2 - this.topleft.y * this.scale,
+            star.starDiameter / 128 * this.scale
           );
   
-          if (mouse.x == screen_sector.x && mouse.y == screen_sector.y) {
+          if (galaxy_mouse.x == screen_sector.x && galaxy_mouse.y == screen_sector.y) {
             stroke("orange");
             noFill();
             circle(
-              screen_sector.x * 16 + 8,
-              screen_sector.y * 16 + 8,
+              screen_sector.x * this.scale + this.scale / 2 - this.topleft.x * this.scale,
+              screen_sector.y * this.scale + this.scale / 2 - this.topleft.y * this.scale,
               star.starDiameter / 4
             );
           }
@@ -206,19 +230,12 @@ let universe;
 function setupUniverse() {
   galaxyOffset = createVector(0, 0);
   starSelected = undefined;
-  universe = new Universe(width / 16, height / 16);
+  universe = new Universe(width / 16, height / 16, 5);
 }
 
 function drawUniverse() {
-  // let dt = deltaTime / 1000;
-  // if (keyIsDown(UP_ARROW)) galaxyOffset.y -= 50 * dt;
-  // if (keyIsDown(DOWN_ARROW)) galaxyOffset.y += 50 * dt;
-  // if (keyIsDown(LEFT_ARROW)) galaxyOffset.x -= 50 * dt;
-  // if (keyIsDown(RIGHT_ARROW)) galaxyOffset.x += 50 * dt;
-
   background(0);
   universe.draw();
-  
 }
 
 /**
