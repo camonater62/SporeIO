@@ -251,10 +251,15 @@ class Ship {
   }
 
   draw() {
-    // TODO
     noStroke();
     fill(this.c);
-    circle(this.pos.x, this.pos.y, 2 * this.r);
+    let normvel = p5.Vector.normalize(this.vel);
+    let p1 = p5.Vector.mult(normvel, this.r);
+    let p2 = createVector(-p1.y / 2, p1.x / 2);
+    let p3 = createVector(p1.y / 2, -p1.x / 2);
+    triangle(p1.x + this.pos.x, p1.y + this.pos.y, 
+             p2.x + this.pos.x, p2.y + this.pos.y, 
+             p3.x + this.pos.x, p3.y + this.pos.y);
   }
 
   move() {
@@ -401,7 +406,7 @@ function setupUniverse() {
         random(0, width),
         random(0, height),
       ),
-      random(5, 10),
+      random(5, 15),
       createVector(
         random(-5, 5),
         random(-5, 5)
