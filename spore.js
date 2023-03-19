@@ -1,4 +1,8 @@
+//Boids implementation from Daniel Shiffman
+//https://editor.p5js.org/codingtrain/sketches/ry4XZ8OkN
+
 let collided = false;
+let alignNum, cohesionNum, separationNum;
 
 class Circle {
   constructor(pos, r, vel, c) {
@@ -6,6 +10,10 @@ class Circle {
     this.r = r;
     this.vel = vel;
     this.c = c;
+    this.maxSpeed = 5;
+    this.vel.setMag(random(2, 4));
+    this.acceleration = createVector();
+    this.maxForce = 0.2;
   }
 
   draw() {
@@ -16,14 +24,13 @@ class Circle {
 
   move() {
     this.pos.add(this.vel);
-    let n = noise(this.pos.x, this.pos.y, frameCount);
-    n -= 0.5;
-    n *= PI / 2;
-    this.vel.rotate(n);
-    if (this.pos.x < -20) this.pos.x = width + 20;
-    if (this.pos.x > width + 20) this.pos.x = -20;
-    if (this.pos.y < -20) this.pos.y = height + 20;
-    if (this.pos.y > height + 20) this.pos.y = -20;
+    this.vel.add(this.acceleration);
+    this.vel.limit(this.maxSpeed);
+    this.acceleration.mult(0);
+    if (this.pos.x < -this.r * 2) this.pos.x = width + 20;
+    if (this.pos.x > width + this.r * 2) this.pos.x = -20;
+    if (this.pos.y < -this.r * 2) this.pos.y = height + 20;
+    if (this.pos.y > height + this.r * 2) this.pos.y = -20;
   }
 
   detectCollision() {
@@ -72,7 +79,82 @@ class Circle {
     }
     circles.splice(circles.indexOf(this), 1);
   }
-}
+
+  align() {
+    let perceptionRadius = 25;
+    let steering = createVector();
+    let total = 0;
+    for(let circle2 of circles) {
+      let d = this.pos.dist(circle2.pos);
+      if(circle2 != this && d < perceptionRadius && d != 0) {
+          steering.add(circle2.velocity);
+          total++;
+        }
+      }
+      if(total > 0) {
+        steering = this.updateSteering(steering, total);
+      }
+      return steering;
+    }
+
+    separation() {
+      let perceptionRadius = 24;
+      let steering = createVector();
+      let total = 0;
+      for(let circle2 of circles) {
+        let d = this.pos.dist(circle2.pos);
+        if (circle2 != this && d < perceptionRadius && d != 0) {
+          let diff = p5.Vector.sub(this.pos, circle2.pos);
+          diff.div(d * d);
+          steering.add(diff);
+          total++;
+        }
+      }
+      if(total > 0) {
+        steering = this.updateSteering(steering, total);
+      }
+      return steering;
+    }
+
+    cohesion() {
+      let perceptionRadius = 50;
+      let steering = createVector();
+      let total = 0;
+      for(let circle2 of circles) {
+        let d = this.pos.dist(circle2.pos);
+        if (circle2 != this && d < perceptionRadius && d != 0) {
+          steering.add(circle2.pos);
+          total++;
+        }
+      }
+      if(total > 0) {
+        steering = this.updateSteering(steering, total);
+      }
+      return steering;
+    }
+
+    flock() {
+      let alignment = this.align();
+      let cohesion = this.cohesion();
+      let separation = this.separation();
+
+      alignment.mult(alignNum);
+      cohesion.mult(cohesionNum);
+      separation.mult(separationNum);
+
+      this.acceleration.add(alignment);
+      this.acceleration.add(cohesion);
+      this.acceleration.add(separation);
+    }
+
+    updateSteering(steering, total) {
+      steering.div(total);
+      steering.setMag(this.maxSpeed);
+      steering.sub(this.velocity);
+      steering.limit(this.maxForce);
+      return steering;
+    }
+  }
 
 let circles = [];
 
@@ -81,25 +163,35 @@ function setupSpore() {
     new Circle(
       createVector(random(width), random(height)),
       20,
-      createVector(2, 2),
+      createVector(random(-2, 2), random(-2, 2)),
       color(0)
     )
   );
+  alignNum = random(2);
+  cohesionNum = random(2);
+  separationNum = random(2);
 }
 
 function drawSpore() {
+  if(frameCount % 6000 == 0 ) {
+    alignNum = random(2);
+    cohesionNum = random(2);
+    separationNum = random(2);
+  }
   background(220);
   circles.forEach((c) => {
     if (c != null) {
       c.move();
       c.detectCollision();
       c.draw();
+      c.flock();
       if (c.r >= 100) {
         c.explode();
       }
     }
   });
   fill(0);
+  textFont(myFont);
   textSize(32);
   text("Number of circles: " + circles.length, 40, 40);
   let max = circles[0];
@@ -114,7 +206,7 @@ function mouseClickedSpore() {
     new Circle(
       createVector(mouseX, mouseY),
       random(10, 20),
-      createVector(random(width * 0.01), random(height * 0.01)),
+      createVector(random(-width * 0.01, width * 0.01), random(-height * 0.01, height * 0.01)),
       color(
         map(mouseX, 0, width, 0, 255),
         map(mouseY, 0, height, 0, 255),

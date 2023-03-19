@@ -1,6 +1,9 @@
 let states = [ 'Spore', 'City', 'Universe'];
 let state = 0;
-
+let myFont;
+function preload() {
+    myFont = loadFont('./JosefinSans-Regular.ttf');
+}
 function setup() {
     createCanvas(windowWidth, windowHeight); 
 
