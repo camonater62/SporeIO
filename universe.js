@@ -11,11 +11,11 @@ const starColors = [
 
 class StarSystem {
   /**
-   * 
-   * @param {Number} x 
-   * @param {Number} y 
-   * @param {Boolean} generateFullSystem 
-   * @returns 
+   *
+   * @param {Number} x
+   * @param {Number} y
+   * @param {Boolean} generateFullSystem
+   * @returns
    */
   constructor(x, y, generateFullSystem = false) {
     this.Lehmer = ((x & 0xffff) << 16) | (y & 0xffff);
@@ -78,9 +78,9 @@ class StarSystem {
   }
 
   /**
-   * 
-   * @param {Number} min 
-   * @param {Number} max 
+   *
+   * @param {Number} min
+   * @param {Number} max
    * @returns Number
    */
   rndInt(min, max) {
@@ -88,9 +88,9 @@ class StarSystem {
   }
 
   /**
-   * 
-   * @param {Number} min 
-   * @param {Number} max 
+   *
+   * @param {Number} min
+   * @param {Number} max
    * @returns Number
    */
   rndDouble(min, max) {
@@ -102,20 +102,20 @@ class StarSystem {
 
 class Universe {
   /**
-   * 
-   * @param {Number} w 
-   * @param {Number} h 
+   *
+   * @param {Number} w
+   * @param {Number} h
    * @param {Number} screens
    */
-  constructor(w, h, screens=1) {
+  constructor(w, h, screens = 1) {
     this.w = w;
     this.h = h;
 
-    this.minx = floor(-screens / 2 * w);
-    this.maxx = ceil(screens / 2 * w);
+    this.minx = floor((-screens / 2) * w);
+    this.maxx = ceil((screens / 2) * w);
 
-    this.miny = floor(-screens / 2 * h);
-    this.maxy = ceil(screens / 2 * h);
+    this.miny = floor((-screens / 2) * h);
+    this.maxy = ceil((screens / 2) * h);
 
     this.topleft = createVector(0, 0);
     this.scale = 16;
@@ -139,7 +139,7 @@ class Universe {
     if (keyIsDown(LEFT_ARROW)) this.topleft.x -= 50 * dt;
     if (keyIsDown(RIGHT_ARROW)) this.topleft.x += 50 * dt;
 
-    this.scale = 16 * max(1, mousePos/250);
+    this.scale = 16 * max(1, mousePos / 250);
 
     let sectorsX = width / this.scale;
     let sectorsY = height / this.scale;
@@ -147,53 +147,75 @@ class Universe {
     this.topleft.y = max(this.miny, this.topleft.y);
     this.topleft.x = max(this.minx, this.topleft.x);
 
-    this.topleft.y = min(this.maxy - sectorsY, this.topleft.y);    
-    this.topleft.x = min(this.maxx - sectorsX, this.topleft.x);  
-  
-    let mouse = createVector(int(mouseX / this.scale), int(mouseY / this.scale));
+    this.topleft.y = min(this.maxy - sectorsY, this.topleft.y);
+    this.topleft.x = min(this.maxx - sectorsX, this.topleft.x);
+
+    let mouse = createVector(
+      int(mouseX / this.scale),
+      int(mouseY / this.scale)
+    );
     let galaxy_mouse = createVector(
       int(mouse.x + this.topleft.x),
       int(mouse.y + this.topleft.y)
     );
-  
+
     let screen_sector = createVector(0, 0);
-  
-    for (screen_sector.y = floor(this.topleft.y); screen_sector.y < ceil(this.topleft.y + sectorsY); screen_sector.y++) {
-      for (screen_sector.x = floor(this.topleft.x); screen_sector.x < ceil(this.topleft.x + sectorsX); screen_sector.x++) {
+
+    for (
+      screen_sector.y = floor(this.topleft.y);
+      screen_sector.y < ceil(this.topleft.y + sectorsY);
+      screen_sector.y++
+    ) {
+      for (
+        screen_sector.x = floor(this.topleft.x);
+        screen_sector.x < ceil(this.topleft.x + sectorsX);
+        screen_sector.x++
+      ) {
         let star = this.grid[screen_sector.y][screen_sector.x];
-  
+
         if (star.starExists) {
           noStroke();
           fill(star.starColor);
           circle(
-            screen_sector.x * this.scale + this.scale / 2 - this.topleft.x * this.scale,
-            screen_sector.y * this.scale + this.scale / 2 - this.topleft.y * this.scale,
-            star.starDiameter / 128 * this.scale
+            screen_sector.x * this.scale +
+              this.scale / 2 -
+              this.topleft.x * this.scale,
+            screen_sector.y * this.scale +
+              this.scale / 2 -
+              this.topleft.y * this.scale,
+            (star.starDiameter / 128) * this.scale
           );
-  
-          if (galaxy_mouse.x == screen_sector.x && galaxy_mouse.y == screen_sector.y) {
+
+          if (
+            galaxy_mouse.x == screen_sector.x &&
+            galaxy_mouse.y == screen_sector.y
+          ) {
             stroke("orange");
             noFill();
             circle(
-              screen_sector.x * this.scale + this.scale / 2 - this.topleft.x * this.scale,
-              screen_sector.y * this.scale + this.scale / 2 - this.topleft.y * this.scale,
+              screen_sector.x * this.scale +
+                this.scale / 2 -
+                this.topleft.x * this.scale,
+              screen_sector.y * this.scale +
+                this.scale / 2 -
+                this.topleft.y * this.scale,
               star.starDiameter / 4
             );
           }
         }
       }
     }
-  
+
     if (mouseIsPressed) {
       let star = this.grid[galaxy_mouse.y][galaxy_mouse.x];
-  
+
       if (star.starExists) {
         starSelected = galaxy_mouse;
       } else {
         starSelected = undefined;
       }
     }
-  
+
     if (starSelected != undefined) {
       let star = this.grid[starSelected.y][starSelected.x];
       drawWindow(star);
@@ -216,6 +238,142 @@ class Planet {
   }
 }
 
+class Ship {
+  constructor(pos, r, vel, c) {
+    this.pos = pos;
+    this.r = r;
+    this.vel = vel;
+    this.c = c;
+    this.maxSpeed = 5;
+    this.vel.setMag(random(2, 4));
+    this.acceleration = createVector();
+    this.maxForce = 0.2;
+  }
+
+  draw() {
+    // TODO
+    noStroke();
+    fill(this.c);
+    circle(this.pos.x, this.pos.y, 2 * this.r);
+  }
+
+  move() {
+    this.pos.add(this.vel);
+    this.vel.add(this.acceleration);
+    this.vel.limit(this.maxSpeed);
+    this.acceleration.mult(0);
+    if (this.pos.x < -this.r * 2) this.pos.x = width + 20;
+    if (this.pos.x > width + this.r * 2) this.pos.x = -20;
+    if (this.pos.y < -this.r * 2) this.pos.y = height + 20;
+    if (this.pos.y > height + this.r * 2) this.pos.y = -20;
+  }
+
+  detectCollision() {
+    for (let i = 0; i < ships.length; i++) {
+      let other = ships[i];
+      if (
+        other != null &&
+        other != this &&
+        other.r < this.r &&
+        !colorEq(this.c, other.c) &&
+        this.r < 150
+      ) {
+        let d = this.pos.dist(other.pos);
+        // let radii = this.r + circle2.r;
+        //merge the circles here
+        if (d <= this.r) {
+          ships.push(
+            new Ship(
+              this.pos,
+              this.r + Math.sqrt(other.r),
+              this.vel,
+              lerpColor(this.c, other.c, other.r / this.r)
+            )
+          );
+          ships.splice(i, 1);
+          ships.splice(ships.indexOf(this), 1);
+          return;
+        }
+      }
+    }
+  }
+
+  align() {
+    let perceptionRadius = 25;
+    let steering = createVector();
+    let total = 0;
+    for (let other of ships) {
+      let d = this.pos.dist(other.pos);
+      if (other != this && d < perceptionRadius && d != 0) {
+        steering.add(other.velocity);
+        total++;
+      }
+    }
+    if (total > 0) {
+      steering = this.updateSteering(steering, total);
+    }
+    return steering;
+  }
+
+  separation() {
+    let perceptionRadius = 24;
+    let steering = createVector();
+    let total = 0;
+    for (let other of ships) {
+      let d = this.pos.dist(other.pos);
+      if (other != this && d < perceptionRadius && d != 0) {
+        let diff = p5.Vector.sub(this.pos, other.pos);
+        diff.div(d * d);
+        steering.add(diff);
+        total++;
+      }
+    }
+    if (total > 0) {
+      steering = this.updateSteering(steering, total);
+    }
+    return steering;
+  }
+
+  cohesion() {
+    let perceptionRadius = 50;
+    let steering = createVector();
+    let total = 0;
+    for (let other of ships) {
+      let d = this.pos.dist(other.pos);
+      if (other != this && d < perceptionRadius && d != 0) {
+        steering.add(other.pos);
+        total++;
+      }
+    }
+    if (total > 0) {
+      steering = this.updateSteering(steering, total);
+    }
+    return steering;
+  }
+
+  flock() {
+    let alignment = this.align();
+    let cohesion = this.cohesion();
+    let separation = this.separation();
+
+    alignment.mult(alignNum);
+    cohesion.mult(cohesionNum);
+    separation.mult(separationNum);
+
+    this.acceleration.add(alignment);
+    this.acceleration.add(cohesion);
+    this.acceleration.add(separation);
+  }
+
+  updateSteering(steering, total) {
+    steering.div(total);
+    steering.setMag(this.maxSpeed);
+    steering.sub(this.velocity);
+    steering.limit(this.maxForce);
+    return steering;
+  }
+}
+
 /**
  * @type {p5.Vector}
  */
@@ -227,20 +385,52 @@ let starSelected;
 
 let universe;
 
+/**
+ * @type {Ship[]}
+ */
+let ships = [];
+
 function setupUniverse() {
   galaxyOffset = createVector(0, 0);
   starSelected = undefined;
   universe = new Universe(width / 16, height / 16, 5);
+
+  for (let i = 0; i < 15; i++) {
+    ships.push(new Ship(
+      createVector(
+        random(0, width),
+        random(0, height),
+      ),
+      random(5, 10),
+      createVector(
+        random(-5, 5),
+        random(-5, 5)
+      ),
+      color(
+        random(256),
+        random(256),
+        random(256)
+      )
+    ));
+  }
 }
 
 function drawUniverse() {
   background(0);
   universe.draw();
+  ships.forEach((s) => {
+    if (s != null) {
+      s.move();
+      s.detectCollision();
+      s.draw();
+      s.flock();
+    }
+  });
 }
 
 /**
- * 
- * @param {StarSystem} star 
+ *
+ * @param {StarSystem} star
  */
 function drawWindow(star) {
   // Draw window
