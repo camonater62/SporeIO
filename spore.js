@@ -14,6 +14,8 @@ class Circle {
     this.vel.setMag(random(2, 4));
     this.acceleration = createVector();
     this.maxForce = 0.2;
+
+    this.delete = false;
   }
 
   draw() {
@@ -38,7 +40,7 @@ class Circle {
       let circle2 = circles[i];
       if (circle2 != null && circle2 != this
         && circle2.r < this.r && !colorEq(this.c, circle2.c)
-        && this.r < 150) {
+        && this.r < 150 && !this.delete && !circle2.delete) {
         let d = this.pos.dist(circle2.pos);
         // let radii = this.r + circle2.r;
         //merge the circles here
@@ -52,8 +54,8 @@ class Circle {
               lerpColor(this.c, circle2.c, circle2.r / this.r)
             )
           );
-          circles.splice(i, 1);
-          circles.splice(circles.indexOf(this), 1);
+          this.delete = true;
+          circle2.delete = true;
           return;
         }
       }
@@ -77,7 +79,7 @@ class Circle {
         )
       );
     }
-    circles.splice(circles.indexOf(this), 1);
+    this.delete = true;
   }
 
   align() {
@@ -180,7 +182,7 @@ function drawSpore() {
   }
   background(220);
   circles.forEach((c) => {
-    if (c != null) {
+    if (c != null && !c.delete) {
       c.move();
       c.detectCollision();
       c.draw();
@@ -190,6 +192,7 @@ function drawSpore() {
       }
     }
   });
+  circles = circles.filter((c) => { return !c.delete; });
   fill(0);
   textFont(myFont);
   textSize(32);
