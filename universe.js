@@ -4,9 +4,9 @@ const starColors = [
   "#FFFFA3",
   "#C8C8FF",
   "#9DCBFF",
-  "#FF9F9F",
-  "#FF5E41",
-  "#9D1928",
+  // "#FF9F9F",
+  // "#FF5E41",
+  // "#9D1928",
 ];
 
 class StarSystem {
@@ -228,7 +228,7 @@ class Universe {
       let x = int(random(this.w));
 
       if (this.grid[y][x].starExists) {
-        return createVector(x, y);
+        return createVector(16 * x, 16 * y);
       }
     }
   }
@@ -269,9 +269,9 @@ class Ship {
     let p1 = p5.Vector.mult(normvel, this.r);
     let p2 = createVector(-p1.y / 2, p1.x / 2);
     let p3 = createVector(p1.y / 2, -p1.x / 2);
-    triangle(p1.x + this.pos.x, p1.y + this.pos.y, 
-             p2.x + this.pos.x, p2.y + this.pos.y, 
-             p3.x + this.pos.x, p3.y + this.pos.y);
+    triangle(p1.x + this.pos.x - 16 * universe.topleft.x, p1.y + this.pos.y - 16 * universe.topleft.y, 
+             p2.x + this.pos.x - 16 * universe.topleft.x, p2.y + this.pos.y - 16 * universe.topleft.y, 
+             p3.x + this.pos.x - 16 * universe.topleft.x, p3.y + this.pos.y - 16 * universe.topleft.y);
   }
 
   move() {
@@ -279,10 +279,6 @@ class Ship {
     this.vel.add(this.acceleration);
     this.vel.limit(this.maxSpeed);
     this.acceleration.mult(0);
-    if (this.pos.x < -this.r * 2) this.pos.x = width + 20;
-    if (this.pos.x > width + this.r * 2) this.pos.x = -20;
-    if (this.pos.y < -this.r * 2) this.pos.y = height + 20;
-    if (this.pos.y > height + this.r * 2) this.pos.y = -20;
   }
 
   align() {
@@ -355,7 +351,7 @@ class Ship {
   updateSteering(steering, total) {
     let targetVec = p5.Vector.sub(this.target, this.pos);
     targetVec.normalize();
-    steering.lerp(targetVec, 0.9);
+    steering.lerp(targetVec, 0.95);
     steering.setMag(this.maxSpeed);
     steering.sub(this.velocity);
     steering.limit(this.maxForce);
@@ -390,11 +386,11 @@ function setupUniverse() {
   starSelected = undefined;
   universe = new Universe(width / 16, height / 16, 5);
 
-  for (let i = 0; i < 15; i++) {
+  for (let i = 0; i < 250; i++) {
     ships.push(new Ship(
       createVector(
-        random(0, width),
-        random(0, height),
+        random(-universe.w * 8 * 5, universe.w * 8 * 5),
+        random(-universe.h * 8 * 5, universe.h * 8 * 5),
       ),
       random(5, 15),
       createVector(
@@ -402,9 +398,7 @@ function setupUniverse() {
         random(-5, 5)
       ),
       color(
-        random(256),
-        random(256),
-        random(256)
+        255, 0, 0
       )
     ));
   }
