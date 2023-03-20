@@ -152,6 +152,7 @@ class Home extends Building {
 
     update() {
         super.update();
+        console.log("suup");
         this.timer += deltaTime;
         if (this.timer > this.countdown) {
             if (!this.isFilled() && this.complete) {
@@ -168,7 +169,7 @@ class Dude extends Entity {    // Dude, The
         this.job = job;             // where does dude spend his life
         this.jobs = [];
         this.resource = false;
-        this.speed = 100;
+        this.speed = 900;
 
         this.load = {
             wood: 0,
@@ -243,7 +244,7 @@ class Dude extends Entity {    // Dude, The
         if (this.jobs.length == 0) {
             if (this.job == null) {
                 console.log("no jobs?");
-                this.setJob(this.newJob());    
+                this.setJob(this.newJob());
             }
         }
         else if (this.jobs.length > 0) {
@@ -261,6 +262,12 @@ class Dude extends Entity {    // Dude, The
         return this.job;
     }
     
+    addJob(Job) {
+        this.jobs.push(Job);
+        this.states.hasJob = true;
+        return;
+    }
+
     setJob(Job) {
         this.jobs.push(Job);
         this.job = Job;
@@ -310,7 +317,21 @@ class Dude extends Entity {    // Dude, The
             this.harvest();
         }
         else if (this.job instanceof Building) {
-            this.build();
+            if (!this.job.complete) {
+                this.build();
+            }
+            // else {
+            //     if (this.load.wood > 0) {
+            //         this.deposit('wood', this.load.gatherAmt * deltaTime / 1000);
+            //     }
+            //     else if (this.load.minerals > 0) {
+            //         this.deposit('minerals', this.load.gatherAmt * deltaTime / 1000);
+            //     }
+            //     else {
+            //         this.jobs.pop();
+            //         this.getJob();
+            //     }
+            // }
         }
         this.states.working = true;
     }
@@ -318,43 +339,75 @@ class Dude extends Entity {    // Dude, The
     harvest() {
         // gather resources
         let harvest = this.job.harvest(this.load.gatherAmt * deltaTime / 1000)
-        if(harvest <= 0) {
-            this.goHome();
+        if (harvest <= 0) {
             this.jobs.pop();
-            this.getJob();
-            return;
+            if (this.jobs.length < 2) {
+                this.goHome();
+            }
+            else {
+                this.commute();
+            }
         }
-        this.load.wood += harvest;
-        if (this.load.wood > this.load.max) {
-            this.load.wood = this.load.max;
-            this.jobs.pop();
-            this.getJob();
-            this.goHome();
+        if (this.job.type == 'wood') {
+            this.load.wood += harvest;
         }
-        
+        else if (this.job.type == 'minerals') {
+            this.load.minerals += harvest;
+        }
+        if (this.load.wood >= this.load.max || this.load.minerals >= this.load.max) {
+            if (this.load.wood >= this.load.max) {
+                this.load.wood = this.load.max;
+                this.jobs.pop();
+                this.goHome();
+            }
+            if (this.load.minerals >= this.load.max) {
+                this.load.minerals = this.load.max;
+                this.jobs.pop();
+                this.goHome();
+            }
+        }
     }
 
     build() {
         // build a building
+        console.log("BUILDINGNGNGGGG");
 
         // if enough resources...
         if (this.load.wood > 0) {
-            this.deposit('wood', this.load.gatherAmt * deltaTime / 1000);
+            this.depositJob('wood', this.load.gatherAmt * deltaTime / 1000);
         }
         if (this.load.minerals > 0) {
-            this.deposit('minerals', this.load.gatherAmt * deltaTime / 1000);
+            this.depositJob('minerals', this.load.gatherAmt * deltaTime / 1000);
         }
+
+        console.log("wood: ", this.job.resources.wood);
+        console.log("mins: ", this.job.resources.minerals);
+
 
         if (this.states.working && this.load.wood <= 0 && this.load.minerals <= 0 && !this.job.complete) {
             let woodToComplete = this.job.resources.wood - this.job.resources.toComplete.wood;                  // how much wood is left until build time
             let mineralsToComplete = this.job.resources.minerals - this.job.resources.toComplete.minerals;      // how much minerals if left until build time
-            if (mineralsToComplete > 0) {
+            if (mineralsToComplete < 0) {
+                console.log("WIEJROWKEF");
                 this.setJob(this.newJob('minerals'));
             }
-            else if (woodToComplete > 0) {
+            else if (woodToComplete < 0) {
+                console.log("AKSJFLAWDFJS");
                 this.setJob(this.newJob('wood'));
             }
-            this.setJob(this.newJob());
+
+            if (woodToComplete >= 0 && mineralsToComplete >= 0) {
+                this.job.completion += deltaTime / 1000;
+                if (this.job.complete) {
+                    this.job.pop();
+                    this.getJob();
+                }
+            }
+            else {
+                this.getJob();
+                console.log("why are you stucK: ", this.job);
+                this.commute();    
+            }
         }
         // add build amount and consume resources.
     }
@@ -367,10 +420,15 @@ class Dude extends Entity {    // Dude, The
 
     enterHome() {
         // what to do when person enters home
+        this.getJob();
+        if (this.jobs.includes(Building)) {
+            console.log("current job: ", this.job);
+            console.log("jobs: ", this.jobs);
+        }
         if (this.load.wood > 0) {
             this.deposit('wood', this.load.gatherAmt * deltaTime / 1000);
         }
-        if (this.load.minerals > 0) {
+        else if (this.load.minerals > 0) {
             this.deposit('minerals', this.load.gatherAmt * deltaTime / 1000);
         }
         // this.home.resources.wood += this.load.gatherAmt * deltaTime / 1000;
@@ -380,6 +438,7 @@ class Dude extends Entity {    // Dude, The
         this.states.resting = true;
 
         if (this.states.working && (this.load.wood <= 0 && this.load.minerals <= 0)) {
+            this.getJob();
             this.commute();
         }
     }
@@ -405,6 +464,34 @@ class Dude extends Entity {    // Dude, The
             }
             else {
                 this.home.resources.minerals += amt;
+                this.load.minerals -= amt;
+                return;
+            }
+        }
+        return;
+    }
+    // yes, I know how disgusting copying and pasting a whole function to alter this.home to this.job is. It's 1 am. we'll fix it in post
+    depositJob(type, amt) {
+        if (type == 'wood') {
+            if (this.load.wood < 0) {
+                // stop
+                this.job.resources.wood += this.load.wood;
+                return;
+            }
+            else {
+                this.job.resources.wood += amt;
+                this.load.wood -= amt;
+                return;
+            }    
+        }
+        else if (type == 'minerals') {
+            if (this.load.minerals < 0) {
+                // stop
+                this.job.resources.minerals == this.load.minerals;
+                return;
+            }
+            else {
+                this.job.resources.minerals += amt;
                 this.load.minerals -= amt;
                 return;
             }
@@ -518,9 +605,16 @@ class Resource extends Entity {
         this.type = type;                   // what resource; wood, minerals, etc.
         this.tier = tier;                   // what size deposit; tiny, small, medium, large, gargantuan
 
-        this.amount = random(75, 150);
+        this.amount = random(500, 1500);
         // if tier is higher, display more minerals.
         this.rad = this.rad * (this.tier * .75);
+
+        if (type == 'minerals') {
+            this.clr = color(25, 75, 255);
+        }
+        else if (type == 'wood') {
+            this.clr = color(215, 35, 75);
+        }
     }
     tierDisplay() {
         // show more minerals/resources for higher tiers
@@ -550,7 +644,6 @@ function addResources(amt, x, width, y, height, type, tier) {
         let randomy = Math.floor(Math.random() * (height - y) + y);
         let randtier = Math.floor(Math.random() * (tier - 1) + 1);
         let randsize = Math.floor(Math.random() * (25 - 20) + 20);
-        let clay = new Entity(randomx, randomy, 120, randsize, 'square', 0);
         let deposit = new Resource(type, randtier);
         resources.push(deposit);
     }
@@ -563,7 +656,7 @@ function addDudes(amt, x, width, y, height, home) {
         let randsize = Math.floor(Math.random() * (25 - 20) + 20);
         let clay = new Entity(randomx, randomy, 120, randsize, 'square', 0);
         let dude = new Dude(home, null);
-        dude.clr = color(150, 25, 250);
+        dude.clr = color(random(25, 255), random(25, 255), random(25, 255));
         dudes.push(dude);
     }
     console.log("dudes: ", dudes);
@@ -572,8 +665,7 @@ function conscriptDudes(amt, job) {
     for (let i = 0; i < amt; i++) {
         let dude = dudes[floor(random(0, dudes.length))];
         if (dude.jobs.length < 3 && !dude.jobs.includes(job)) {
-            dude.setJob(job);
-            dude.getJob();
+            dude.addJob(job);
         }
     }
 }
@@ -582,13 +674,15 @@ function setupCity() {
     // place primary base, generate resources/foliage,
     let homeBase = new Building('Home', 1, null);
     homeBase.complete = true;
+    homeBase.completion = 100;
     homeBase.pos.x = width/2;
     homeBase.pos.y = height/2;
     homeBase.clr = color(255, 0, 0);
+    homeBase.maxbeds = 5;
     buildings.push(homeBase);
     addResources(8, 0, width, 0, height, 'minerals', 3);
     addResources(35, 0, width, 0, height, 'wood', 2);
-    addDudes(1, 0, 600, 0, 600, homeBase);
+    addDudes(5, 0, 600, 0, 600, homeBase);
 
 }
 
