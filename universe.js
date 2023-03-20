@@ -267,14 +267,16 @@ class Ship {
     let p1 = p5.Vector.mult(normvel, this.r * universe.scale / 16);
     let p2 = createVector(-p1.y / 2, p1.x / 2);
     let p3 = createVector(p1.y / 2, -p1.x / 2);
-    triangle((universe.scale / 16) * (p1.x + this.pos.x - universe.topleft.x), 
-            (universe.scale / 16) * (p1.y + this.pos.y - universe.topleft.y), 
-
-            (universe.scale / 16) * (p2.x + this.pos.x - universe.topleft.x), 
-            (universe.scale / 16) * (p2.y + this.pos.y - universe.topleft.y), 
-                    
-            (universe.scale / 16) * (p3.x + this.pos.x - universe.topleft.x), 
-            (universe.scale / 16) * (p3.y + this.pos.y - universe.topleft.y)
+    triangle(
+      // Point 1
+      (universe.scale / 16) * (p1.x + this.pos.x - 16 * universe.topleft.x), 
+      (universe.scale / 16) * (p1.y + this.pos.y - 16 * universe.topleft.y), 
+      // Point 2
+      (universe.scale / 16) * (p2.x + this.pos.x - 16 * universe.topleft.x), 
+      (universe.scale / 16) * (p2.y + this.pos.y - 16 * universe.topleft.y), 
+      // Point 3
+      (universe.scale / 16) * (p3.x + this.pos.x - 16 * universe.topleft.x), 
+      (universe.scale / 16) * (p3.y + this.pos.y - 16 * universe.topleft.y)
     );
   }
 
