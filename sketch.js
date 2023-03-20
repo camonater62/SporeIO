@@ -36,4 +36,5 @@ function mouseClicked() {
 let mousePos = 0;
 function mouseWheel(event) {
     mousePos += event.delta;
+    mousePos = min(0, mousePos);
 }
