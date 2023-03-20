@@ -133,13 +133,14 @@ class Universe {
   }
 
   draw() {
+    console.log(this.scale);
     let dt = deltaTime / 1000;
     if (keyIsDown(UP_ARROW)) this.topleft.y -= 50 * dt;
     if (keyIsDown(DOWN_ARROW)) this.topleft.y += 50 * dt;
     if (keyIsDown(LEFT_ARROW)) this.topleft.x -= 50 * dt;
     if (keyIsDown(RIGHT_ARROW)) this.topleft.x += 50 * dt;
 
-    this.scale = 16 * max(1, mousePos/250);
+    this.scale = 16 * max(1, -mousePos/250);
 
     let sectorsX = width / this.scale;
     let sectorsY = height / this.scale;
@@ -177,7 +178,7 @@ class Universe {
             circle(
               screen_sector.x * this.scale + this.scale / 2 - this.topleft.x * this.scale,
               screen_sector.y * this.scale + this.scale / 2 - this.topleft.y * this.scale,
-              star.starDiameter / 4
+              this.scale * star.starDiameter / 64
             );
           }
         }
