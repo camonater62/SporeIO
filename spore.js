@@ -193,15 +193,6 @@ function drawSpore() {
     }
   });
   circles = circles.filter((c) => { return !c.delete; });
-  fill(0);
-  textFont(myFont);
-  textSize(32);
-  text("Number of circles: " + circles.length, 40, 40);
-  let max = circles[0];
-  for(let i = 1; i < circles.length; i++) {
-    max = circles[i].r * 2 > max.r * 2 ? circles[i] : max;
-  }
-  text("Largest circle: " + Math.floor(max.r * 2), 40, 80);
 }
 
 function mouseClickedSpore() {
