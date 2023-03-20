@@ -98,7 +98,7 @@ class Dude extends Entity {    // Dude, The
         this.home = home;           // what building was dude born in
         this.job = job;             // where does dude spend his life
         this.resource = false;
-        this.speed = 10;
+        this.speed = 100;
 
         this.load = {
             wood: 0,
@@ -172,7 +172,7 @@ class Dude extends Entity {    // Dude, The
 
     getJob() {
         if (this.job == null) {
-            this.job = floor(random(0, resources.length));
+            this.job = resources[floor(random(0, resources.length))];
             if (this.job == null) {
                 this.states.hasJob = false;
                 return null;
@@ -183,10 +183,19 @@ class Dude extends Entity {    // Dude, The
         return this.job;
     }
 
+    newJob() {
+        this.job = resources[floor(random(0, resources.length))];
+        if (this.job == null) {
+            this.states.hasJob = false;
+            return null;
+        }
+        return;
+    }
+
     commute() {
         // find path to destination & go
         // set direction and destination vector
-        this.dir = this.pos - this.job;
+        this.dir = this.pos.angleBetween(this.job.pos);
         this.dest = this.job.pos;
         // state machine
         this.states.atHome = false;
@@ -208,9 +217,15 @@ class Dude extends Entity {    // Dude, The
 
     harvest() {
         // gather resources
-        this.load.amount += this.job.harvest();
-        if (this.load.amount > this.load.max) {
-            this.load.amount = this.load.max;
+        let harvest = this.job.harvest(this.load.gatherAmt * deltaTime / 1000)
+        if(harvest <= 0) {
+            this.goHome();
+            this.newJob();
+            return;
+        }
+        this.load.wood += harvest;
+        if (this.load.wood > this.load.max) {
+            this.load.wood = this.load.max;
             this.goHome();
         }
         
@@ -234,6 +249,7 @@ class Dude extends Entity {    // Dude, The
         // what to do when person enters home
         this.home.resources.wood += this.load.wood;
         this.home.resources.minerals += this.load.minerals;
+        console.log(this.home.resources.wood);
         this.states.resting = true;
         this.resetLoad();
 
@@ -295,16 +311,21 @@ class Dude extends Entity {    // Dude, The
             this.commute();
             console.log("at home");
         }
-        if (this.pos == this.job && this.states.working) {
-            this.harvest();
+        if (p5.Vector.sub(this.job.pos, this.pos).mag() < 5 && this.states.working) {
+            // console.log(this.job);
+            this.work();
             this.goingToJob = false;
             this.atJob = true;
         }
-
+        if(p5.Vector.sub(this.pos, this.home.pos).mag() < 5 && this.states.working) {
+            this.enterHome();
+        }
         // uhh... all of this is to update the speed to simulate velocity
-        if(this.dest != null && this.dest != this.pos) {
-        this.pos.x = lerp(this.pos.x, this.dest.x, cos(this.dir) * this.speed * deltaTime);
-        this.pos.y = lerp(this.pos.y, this.dest.y, sin(this.dir) * this.speed * deltaTime);
+        if(this.dest != null && p5.Vector.sub(this.dest, this.pos).mag() > 5) {
+            let vel = p5.Vector.sub(this.dest, this.pos);
+            vel.normalize();
+            vel.mult(deltaTime / 1000 * this.speed);
+            this.pos.add(vel);
         }
         // if (this.speed < this.wantspeed) {                       // lerp speed
         //     if (this.wantspeed - this.speed <= 0.5) {            // if speed is almost where we want it,
@@ -356,7 +377,8 @@ class Resource extends Entity {
         // show more minerals/resources for higher tiers
     }
     harvest(amt) {
-        if (this.amount - amt <= 0) {
+        console.log(this.amount);
+        if (this.amount <= 0) {
             this.destroy();
             return this.amount;
         }
