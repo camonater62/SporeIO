@@ -225,8 +225,8 @@ class Universe {
 
   randomSystem() {
     while (this.grid && this.grid[0]) {
-      let y = int(random(this.h));
-      let x = int(random(this.w));
+      let y = int(random(-this.h / 2, this.h / 2));
+      let x = int(random(-this.w / 2, this.w / 2));
 
       if (this.grid[y][x].starExists) {
         return createVector(16 * x, 16 * y);
