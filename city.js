@@ -295,15 +295,17 @@ class Dude extends Entity {    // Dude, The
             this.commute();
             console.log("at home");
         }
-        if (this.pos = this.job && this.states.working) {
+        if (this.pos == this.job && this.states.working) {
             this.harvest();
             this.goingToJob = false;
             this.atJob = true;
         }
 
         // uhh... all of this is to update the speed to simulate velocity
+        if(this.dest != null && this.dest != this.pos) {
         this.pos.x = lerp(this.pos.x, this.dest.x, cos(this.dir) * this.speed * deltaTime);
         this.pos.y = lerp(this.pos.y, this.dest.y, sin(this.dir) * this.speed * deltaTime);
+        }
         // if (this.speed < this.wantspeed) {                       // lerp speed
         //     if (this.wantspeed - this.speed <= 0.5) {            // if speed is almost where we want it,
         //         this.speed = this.wantspeed;                 // set it to proper speed
@@ -348,7 +350,7 @@ class Resource extends Entity {
 
         this.amount = random(75, 150);
         // if tier is higher, display more minerals.
-        this.rad = super.rad * (this.tier * .75);
+        this.rad = this.rad * (this.tier * .75);
     }
     tierDisplay() {
         // show more minerals/resources for higher tiers
