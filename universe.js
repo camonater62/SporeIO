@@ -1,13 +1,16 @@
 const starColors = [
-  "#FFFFFF",
-  "#FFFFD9",
-  "#FFFFA3",
-  "#C8C8FF",
-  "#9DCBFF",
-  // "#FF9F9F",
-  // "#FF5E41",
-  // "#9D1928",
+  "#8be9fd",
+  "#ff79c6",
+  "#bd93f9",
+  "#f1fa8c"
 ];
+
+const planetColors = [
+  "#6272a4",
+  "#50fa7b",
+  "#ffb86c",
+  "#ff5555"
+]
 
 class StarSystem {
   /**
@@ -192,7 +195,7 @@ class Universe {
             galaxy_mouse.x == screen_sector.x &&
             galaxy_mouse.y == screen_sector.y
           ) {
-            stroke("orange");
+            stroke("#ffb86c");
             noFill();
             circle(
               screen_sector.x * this.scale + this.scale / 2 - this.topleft.x * this.scale,
@@ -244,6 +247,7 @@ class Planet {
     this.population = 0;
     this.ring = false;
     this.moons = [];
+    this.color = random(planetColors);
   }
 }
 
@@ -354,7 +358,7 @@ class Ship {
     this.acceleration.add(separation);
   }
 
-  updateSteering(steering, total) {
+  updateSteering(steering) {
     let targetVec = p5.Vector.sub(this.target, this.pos);
     targetVec.normalize();
     steering.lerp(targetVec, 0.95);
@@ -404,14 +408,14 @@ function setupUniverse() {
         random(-5, 5)
       ),
       color(
-        255, 0, 0
+        "#ff5555"
       )
     ));
   }
 }
 
 function drawUniverse() {
-  background(0);
+  background("#000");
   universe.draw();
   ships.forEach((s) => {
     if (s != null) {
@@ -430,7 +434,7 @@ function drawUniverse() {
 function drawWindow(star) {
   // Draw window
   noStroke();
-  fill("darkblue");
+  fill("#282a36");
   let h = height / 3;
   rect(8, height - h + 8, width - 16, h - 16);
   noFill();
@@ -451,7 +455,7 @@ function drawWindow(star) {
     let pstep = planet.diameter * (h / 200);
     body.x += 2.5 * pstep;
     noStroke();
-    fill("red");
+    fill(planet.color);
     circle(body.x, body.y, pstep);
 
     let moon = createVector(body.x, body.y);
@@ -460,7 +464,7 @@ function drawWindow(star) {
     for (let m of planet.moons) {
       moon.y += m;
       noStroke();
-      fill("grey");
+      fill("#f8f8f2");
       circle(moon.x, moon.y, 2 * m);
       moon.y += m + 10;
     }
