@@ -120,6 +120,9 @@ class Universe {
     this.topleft = createVector(0, 0);
     this.scale = 16;
 
+    /**
+     * @type {StarSystem[][]}
+     */
     this.grid = {};
 
     for (let y = this.miny; y <= this.maxy; y++) {
@@ -218,6 +221,17 @@ class Universe {
       drawWindow(star);
     }
   }
+
+  randomSystem() {
+    while (this.grid && this.grid[0]) {
+      let y = int(random(this.h));
+      let x = int(random(this.w));
+
+      if (this.grid[y][x].starExists) {
+        return createVector(x, y);
+      }
+    }
+  }
 }
 
 class Planet {
@@ -245,6 +259,7 @@ class Ship {
     this.vel.setMag(random(2, 4));
     this.acceleration = createVector();
     this.maxForce = 0.2;
+    this.target = null;
   }
 
   draw() {
@@ -268,36 +283,6 @@ class Ship {
     if (this.pos.x > width + this.r * 2) this.pos.x = -20;
     if (this.pos.y < -this.r * 2) this.pos.y = height + 20;
     if (this.pos.y > height + this.r * 2) this.pos.y = -20;
-  }
-
-  detectCollision() {
-    for (let i = 0; i < ships.length; i++) {
-      let other = ships[i];
-      if (
-        other != null &&
-        other != this &&
-        other.r < this.r &&
-        !colorEq(this.c, other.c) &&
-        this.r < 150
-      ) {
-        let d = this.pos.dist(other.pos);
-        // let radii = this.r + circle2.r;
-        //merge the circles here
-        if (d <= this.r) {
-          ships.push(
-            new Ship(
-              this.pos,
-              this.r + Math.sqrt(other.r),
-              this.vel,
-              lerpColor(this.c, other.c, other.r / this.r)
-            )
-          );
-          ships.splice(i, 1);
-          ships.splice(ships.indexOf(this), 1);
-          return;
-        }
-      }
-    }
   }
 
   align() {
@@ -368,11 +353,19 @@ class Ship {
   }
 
   updateSteering(steering, total) {
-    steering.div(total);
+    let targetVec = p5.Vector.sub(this.target, this.pos);
+    targetVec.normalize();
+    steering.lerp(targetVec, 0.9);
     steering.setMag(this.maxSpeed);
     steering.sub(this.velocity);
     steering.limit(this.maxForce);
     return steering;
+  }
+
+  chooseTarget() {
+    if (this.target == null || p5.Vector.sub(this.target, this.pos).mag() < 1) {
+      this.target = universe.randomSystem()
+    }
   }
 }
 
@@ -422,8 +415,8 @@ function drawUniverse() {
   universe.draw();
   ships.forEach((s) => {
     if (s != null) {
+      s.chooseTarget();
       s.move();
-      s.detectCollision();
       s.draw();
       s.flock();
     }
