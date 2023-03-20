@@ -1,10 +1,15 @@
 // hello there
 // kaelen cook incorpoclated
 
-entities = [];
+buildings = [];
 dudes = [];
 resources = [];
 mouseHovering = false;
+
+city = {
+    wood: 0,
+    minerals: 0,
+}
 class Entity {
     constructor(x = random(width), y = random(height), clr = color(0, 0, 0), rad = 50, shape = 'square', speed = 0) {
         this.pos = createVector(x, y);             // where dudey is
@@ -48,16 +53,24 @@ class Building extends Entity {
             wood: 0,
             minerals: 0,
             max: 1500,      // max amount of resources
+
+            toComplete: {
+                wood: 150,
+                minerals: 150,
+            }
         }
 
         this.baseclr = this.clr;
+        this.completion = 0;      // when at 100, fill.
+        this.complete = false;      // determines if a building or being constructed
 
         // worker/people data (some may be irrelevant):
-        this.capacity = this.area;                       // number, how many people can be in building at once.
-        this.workCap = 2;                        // number, how many people can have jobs here.
+        this.capacity = 5;                       // number, how many people can be in building at once.
         this.workers = [];                              // list of all workers of building.
-        this.peeps = 0;                                 // amt of people currently in building.
-        this.people = [];                               // list of people currently in building.
+        buildings.push(this);
+
+        this.timer = 0;
+        this.countdown = random(2800, 5600);    // time to add a new dude
     }
 
     contains(pointX, pointY) {
@@ -74,9 +87,16 @@ class Building extends Entity {
     }
 
     draw() {
-        noStroke();                                             // if only I could've done this for grandpa
-        fill(this.clr);                                         // this would've been a bit weird for grandpa
-        circle(this.pos.x, this.pos.y, 2 * this.rad);           // oh yeah now grandpa would've loved circles
+        if (!this.complete) {
+            stroke(50, 50, 125);
+            strokeWeight(1.5);
+            fill(0, 0, 0, 0);    
+        }
+        else if (this.complete) {
+            stroke(50, 50, 125);
+            fill(75, 75, 150);    
+        }
+        circle(this.pos.x, this.pos.y, this.rad);           // oh yeah now grandpa would've loved circles
     }
 
     update() {
@@ -87,6 +107,21 @@ class Building extends Entity {
         else {
             this.clr = this.baseclr;
         }
+        if (this.completion >= 100) {
+            this.complete = true;
+        }
+        else {
+            this.complete = false;
+        }
+        this.timer += deltaTime;
+        if (this.timer > this.countdown) {
+            if (!this.complete && this.workers.length < this.capacity) {
+                console.log("hey you there");
+                conscriptDudes(this.capacity - this.workers.length, this);
+                this.timer = 0;
+            }
+        }
+
     }
 }
 
@@ -94,22 +129,35 @@ class Home extends Building {
     constructor(pops, beds) {
         super();
         this.residents = [];                    // how many people are in this house
-        pops.forEach((p) => {
-            this.residents.push(p);
-        })
+        // pops.forEach((p) => {
+        //     this.residents.push(p);
+        // })
         this.maxbeds = beds;                    // how many people can this house hold
         this.full = false;                      // bool if at enough people
     }
 
     isFilled() {
-        if (this.residents >= this.maxbeds) {
+        if (this.residents.length >= this.maxbeds) {
             return true;
         }
         return false;
     }
 
-    addDude(dude) {
-        this.residents += dude;
+    addDude() {
+        let dude = new Dude(this, null);
+        dude.clr = color(random(25, 255), random(25, 255), random(25, 255));
+        this.residents.push(dude);
+        dudes.push(dude);
+    }
+
+    update() {
+        super.update();
+        this.timer += deltaTime;
+        if (this.timer > this.countdown) {
+            if (!this.isFilled() && this.complete) {
+                this.addDude();
+            }
+        }
     }
 }
 
@@ -118,6 +166,7 @@ class Dude extends Entity {    // Dude, The
         super(home.pos.x, home.pos.y, color(0, 0, 200), 20, 'circle', 100);
         this.home = home;           // what building was dude born in
         this.job = job;             // where does dude spend his life
+        this.jobs = [];
         this.resource = false;
         this.speed = 100;
 
@@ -153,11 +202,9 @@ class Dude extends Entity {    // Dude, The
 
     getAllHomes() {
         let homes = [];
-        for (let entity of entities) {
-          if (entity instanceof Home) {
-            homes.push(entity);
-          } else if (entity instanceof SubEntity) {
-            homes = homes.concat(getAllHomes(entity));
+        for (let building of buildings) {
+          if (building instanceof Home) {
+            homes.push(building);
           }
         }
         return homes;
@@ -192,25 +239,57 @@ class Dude extends Entity {    // Dude, The
     }
 
     getJob() {
-        if (this.job == null) {
-            this.job = resources[floor(random(0, resources.length))];
+        console.log("pew");
+        if (this.jobs.length == 0) {
             if (this.job == null) {
-                this.states.hasJob = false;
-                return null;
+                console.log("no jobs?");
+                this.setJob(this.newJob());    
+            }
+        }
+        else if (this.jobs.length > 0) {
+            if (this.job != this.jobs[this.jobs.length - 1]) {
+                this.job = this.jobs[this.jobs.length - 1];
+                console.log(this.jobs[this.jobs.length - 1]);
+                this.commute();
+            }
+            else {
+                return;
             }
         }
         this.states.hasJob = true;
         console.log("working at: ", this.job);
         return this.job;
     }
-
-    newJob() {
-        this.job = resources[floor(random(0, resources.length))];
-        if (this.job == null) {
-            this.states.hasJob = false;
+    
+    setJob(Job) {
+        this.jobs.push(Job);
+        this.job = Job;
+        this.states.hasJob = true;
+        return;
+    }
+    // function to find a list of resources, pick a random one (depending on minerals or wood), and assign it as a new job.
+    newJob(type) {
+        let jobs = [];                  // set up list of new jobs
+        if (type == 'minerals') {       // search for minerals
+            let minerals = resources.filter(resource => resource.type === "minerals");          // filter all resources for minerals
+            jobs = minerals;            // set list of jobs to minerals
+        }
+        else if (type == 'wood') {
+            let wood = resources.filter(resource => resource.type === "wood");              // filter all resources for wood
+            jobs = wood;                // set list of jobs to wood
+        }
+        else if (type == null) {
+            jobs = resources;           // if no specific criterion, set jobs to all resources
+        }
+        console.log('hello');
+        let job = resources[floor(random(0, jobs.length))];          // pick a random job in list of available jobs
+        if (job == null) {         // if there are no available jobs;
+            console.log("no available jobs!?");
+            this.states.hasJob = false;     // give up.
             return null;
         }
-        return;
+        console.log("returning job");
+        return job;             // otherwise, return your new job.
     }
 
     commute() {
@@ -241,12 +320,15 @@ class Dude extends Entity {    // Dude, The
         let harvest = this.job.harvest(this.load.gatherAmt * deltaTime / 1000)
         if(harvest <= 0) {
             this.goHome();
-            this.newJob();
+            this.jobs.pop();
+            this.getJob();
             return;
         }
         this.load.wood += harvest;
         if (this.load.wood > this.load.max) {
             this.load.wood = this.load.max;
+            this.jobs.pop();
+            this.getJob();
             this.goHome();
         }
         
@@ -256,7 +338,24 @@ class Dude extends Entity {    // Dude, The
         // build a building
 
         // if enough resources...
+        if (this.load.wood > 0) {
+            this.deposit('wood', this.load.gatherAmt * deltaTime / 1000);
+        }
+        if (this.load.minerals > 0) {
+            this.deposit('minerals', this.load.gatherAmt * deltaTime / 1000);
+        }
 
+        if (this.states.working && this.load.wood <= 0 && this.load.minerals <= 0 && !this.job.complete) {
+            let woodToComplete = this.job.resources.wood - this.job.resources.toComplete.wood;                  // how much wood is left until build time
+            let mineralsToComplete = this.job.resources.minerals - this.job.resources.toComplete.minerals;      // how much minerals if left until build time
+            if (mineralsToComplete > 0) {
+                this.setJob(this.newJob('minerals'));
+            }
+            else if (woodToComplete > 0) {
+                this.setJob(this.newJob('wood'));
+            }
+            this.setJob(this.newJob());
+        }
         // add build amount and consume resources.
     }
 
@@ -268,20 +367,49 @@ class Dude extends Entity {    // Dude, The
 
     enterHome() {
         // what to do when person enters home
-        this.home.resources.wood += this.load.wood;
-        this.home.resources.minerals += this.load.minerals;
-        console.log(this.home.resources.wood);
+        if (this.load.wood > 0) {
+            this.deposit('wood', this.load.gatherAmt * deltaTime / 1000);
+        }
+        if (this.load.minerals > 0) {
+            this.deposit('minerals', this.load.gatherAmt * deltaTime / 1000);
+        }
+        // this.home.resources.wood += this.load.gatherAmt * deltaTime / 1000;
+        // this.home.resources.minerals += this.load.gatherAmt * deltaTime / 1000;
+        console.log("wood: ", this.home.resources.wood);
+        console.log("mins: ", this.home.resources.minerals);
         this.states.resting = true;
-        this.resetLoad();
 
-        if (this.states.working) {
+        if (this.states.working && (this.load.wood <= 0 && this.load.minerals <= 0)) {
             this.commute();
         }
     }
 
-    resetLoad() {
-        this.load.wood = 0;
-        this.load.minerals = 0;
+    deposit(type, amt) {
+        if (type == 'wood') {
+            if (this.load.wood < 0) {
+                // stop
+                this.home.resources.wood += this.load.wood;
+                return;
+            }
+            else {
+                this.home.resources.wood += amt;
+                this.load.wood -= amt;
+                return;
+            }    
+        }
+        else if (type == 'minerals') {
+            if (this.load.minerals < 0) {
+                // stop
+                this.home.resources.minerals == this.load.minerals;
+                return;
+            }
+            else {
+                this.home.resources.minerals += amt;
+                this.load.minerals -= amt;
+                return;
+            }
+        }
+        return;
     }
 
     goHome() {
@@ -435,19 +563,29 @@ function addDudes(amt, x, width, y, height, home) {
         let randsize = Math.floor(Math.random() * (25 - 20) + 20);
         let clay = new Entity(randomx, randomy, 120, randsize, 'square', 0);
         let dude = new Dude(home, null);
-        dude.clr = color(15, 15, 150);
+        dude.clr = color(150, 25, 250);
         dudes.push(dude);
     }
     console.log("dudes: ", dudes);
+}
+function conscriptDudes(amt, job) {
+    for (let i = 0; i < amt; i++) {
+        let dude = dudes[floor(random(0, dudes.length))];
+        if (dude.jobs.length < 3 && !dude.jobs.includes(job)) {
+            dude.setJob(job);
+            dude.getJob();
+        }
+    }
 }
 
 function setupCity() {
     // place primary base, generate resources/foliage,
     let homeBase = new Building('Home', 1, null);
+    homeBase.complete = true;
     homeBase.pos.x = width/2;
     homeBase.pos.y = height/2;
     homeBase.clr = color(255, 0, 0);
-    entities.push(homeBase);
+    buildings.push(homeBase);
     addResources(8, 0, width, 0, height, 'minerals', 3);
     addResources(35, 0, width, 0, height, 'wood', 2);
     addDudes(1, 0, 600, 0, 600, homeBase);
@@ -464,7 +602,7 @@ function drawCity() {
         ellipse(mouseX, mouseY, 50);
     }
 
-    entities.forEach((e) => {
+    buildings.forEach((e) => {
         e.draw();
         e.update();
     });
@@ -480,4 +618,12 @@ function drawCity() {
 
 function mouseClickedCity() {
     // transition to new city for now
+    let building = new Home(0, random(3, 5));
+    building.completion = 0;
+    building.complete = false;
+    building.pos.x = mouseX;
+    building.pos.y = mouseY;
+    building.clr = color(255, 0, 0);
+    buildings.push(building);
+
 }
