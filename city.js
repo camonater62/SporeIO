@@ -4,6 +4,7 @@
 entities = [];
 dudes = [];
 resources = [];
+mouseHovering = false;
 class Entity {
     constructor(x = random(width), y = random(height), clr = color(0, 0, 0), rad = 50, shape = 'square', speed = 0) {
         this.pos = createVector(x, y);             // where dudey is
@@ -49,6 +50,8 @@ class Building extends Entity {
             max: 1500,      // max amount of resources
         }
 
+        this.baseclr = this.clr;
+
         // worker/people data (some may be irrelevant):
         this.capacity = this.area;                       // number, how many people can be in building at once.
         this.workCap = 2;                        // number, how many people can have jobs here.
@@ -56,6 +59,14 @@ class Building extends Entity {
         this.peeps = 0;                                 // amt of people currently in building.
         this.people = [];                               // list of people currently in building.
     }
+
+    contains(pointX, pointY) {
+        // Check if the given point is inside the circle
+        let distanceSq = (pointX - this.x) ** 2 + (pointY - this.y) ** 2;
+        let radiusSq = this.radius ** 2;
+        return distanceSq <= radiusSq;
+    }
+
     upgrade() {
         this.tier += 1;
         this.rad += (tier - 1) * this.rad / 3;              // basically, add a third of its size with every tier.
@@ -66,6 +77,16 @@ class Building extends Entity {
         noStroke();                                             // if only I could've done this for grandpa
         fill(this.clr);                                         // this would've been a bit weird for grandpa
         circle(this.pos.x, this.pos.y, 2 * this.rad);           // oh yeah now grandpa would've loved circles
+    }
+
+    update() {
+        if (this.contains(mouseX, mouseY)) {
+            console.log("w9ewroworower");
+            this.clr = color(25, 250, 75, 150);
+        }
+        else {
+            this.clr = this.baseclr;
+        }
     }
 }
 
@@ -80,7 +101,7 @@ class Home extends Building {
         this.full = false;                      // bool if at enough people
     }
 
-    filled() {
+    isFilled() {
         if (this.residents >= this.maxbeds) {
             return true;
         }
@@ -425,7 +446,7 @@ function setupCity() {
     let homeBase = new Building('Home', 1, null);
     homeBase.pos.x = width/2;
     homeBase.pos.y = height/2;
-    homeBase.clr = color(50, 50, 125);
+    homeBase.clr = color(255, 0, 0);
     entities.push(homeBase);
     addResources(8, 0, width, 0, height, 'minerals', 3);
     addResources(35, 0, width, 0, height, 'wood', 2);
@@ -435,6 +456,14 @@ function setupCity() {
 
 function drawCity() {
     background(540);
+
+    stroke(50, 50, 125);
+    strokeWeight(1.5);
+    fill(0, 0, 0, 0);
+    if (!mouseHovering) {
+        ellipse(mouseX, mouseY, 50);
+    }
+
     entities.forEach((e) => {
         e.draw();
         e.update();
